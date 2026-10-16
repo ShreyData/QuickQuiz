@@ -15,11 +15,8 @@ SPDX-License-Identifier: MPL-2.0
 </script>
 
 <svelte:head>
-	<title>ClassQuiz/docs - Development-setup</title>
-	<meta
-		name="description"
-		content="How to import quizzes from KAHOOT! into ClassQuiz, the open-source quiz-application,  easily"
-	/>
+	<title>QuickQuiz - Development setup</title>
+	<meta name="description" content="Set up a local QuickQuiz development environment." />
 </svelte:head>
 <article
 	class="prose prose-sm sm:prose lg:prose-lg xl:prose-xl mx-auto mt-10 prose-slate px-4 dark:prose-invert"
@@ -44,7 +41,7 @@ SPDX-License-Identifier: MPL-2.0
 	<ul>
 		<li>
 			Clone the repo:
-			<pre><code>git clone https://github.com/mawoka-myblock/ClassQuiz</code></pre>
+			<pre><code>git clone https://github.com/ShreyData/QuickQuiz</code></pre>
 		</li>
 		<li>
 			Install the dependencies
@@ -68,7 +65,7 @@ SPDX-License-Identifier: MPL-2.0
 			<h4>run_tests.sh - Docs</h4>
 			<p>
 				You can run this script with bash. It helps you managing docker-containers you need
-				to run ClassQuiz. The standard workflow is the following:
+				to run QuickQuiz. The standard workflow is the following:
 			</p>
 			<ol>
 				<li>
@@ -101,11 +98,11 @@ SPDX-License-Identifier: MPL-2.0
 			<p>If you want to run all the tests: <code>./run_tests.sh a</code></p>
 		</li>
 		<li>
-			Add the following line to your <code>/etc/hosts</code>-file, so you can visit ClassQuiz
+			Add the following line to your <code>/etc/hosts</code>-file, so you can visit QuickQuiz
 			via <code>test.com</code> (Required for the Captcha)
 			<pre><code>127.0.0.1 test.com</code></pre>
 
-			Now you can visit ClassQuiz at<a
+			Now you can visit QuickQuiz at<a
 				href="http://test.com:8080"
 				rel="nofollow"
 				target="_blank">http://test.com:8080</a

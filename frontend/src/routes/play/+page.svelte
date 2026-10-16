@@ -96,7 +96,6 @@ SPDX-License-Identifier: MPL-2.0
 	socket.on('joined_game', (data) => {
 		gameData = data;
 		// eslint-disable-next-line no-undef
-		plausible('Joined Game', { props: { game_id: gameData.game_id } });
 		Cookies.set('joined_game', JSON.stringify({ sid: socket.id, username, game_pin }), {
 			expires: 3600
 		});
@@ -162,7 +161,7 @@ SPDX-License-Identifier: MPL-2.0
 
 <svelte:window onbeforeunload={confirmUnload} />
 <svelte:head>
-	<title>ClassQuiz - Play</title>
+	<title>QuickQuiz - Play</title>
 </svelte:head>
 <div
 	class="min-h-screen min-w-full"

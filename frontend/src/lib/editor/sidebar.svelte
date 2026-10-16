@@ -73,7 +73,7 @@ SPDX-License-Identifier: MPL-2.0
         });*/
 </script>
 
-<div class="h-screen relative">
+<div class="relative h-full min-h-0">
 	<div class="h-10 flex justify-center w-full p-1 absolute z-20">
 		<div>
 			<BrownButton onclick={() => (reorder_mode = !reorder_mode)}
@@ -83,7 +83,7 @@ SPDX-License-Identifier: MPL-2.0
 			>
 		</div>
 	</div>
-	<div class="border-r-2 pt-6 px-6 overflow-scroll h-full">
+	<div class="h-full overflow-y-auto overscroll-contain border-r-2 px-4 pt-12 sm:px-6">
 		<div
 			bind:this={propertyCard}
 			class="bg-white shadow-smrounded-lg h-40 p-2 mb-6 hover:cursor-pointer drop-shadow-2xl border border-gray-500 dark:bg-gray-600 transition"

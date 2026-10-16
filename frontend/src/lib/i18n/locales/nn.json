@@ -140,10 +140,10 @@
     "index_page": {
         "features_description": {
             "3": "Redigeringsverktyget og mogleheit for å eksportera resultat som Excel-filer er særlege funksjonar å merka seg.",
-            "1": "ClassQuiz er ein kvissplatform der du kan laga og handsame kvissar.",
+            "1": "QuickQuiz er ein kvissplatform der du kan laga og handsame kvissar.",
             "2": "Den viktigaste funksjonen er at du kan importera kvissar frå Kahoot!"
         },
-        "stats": "Det er allereie {{user_count}} brukarar og {{quiz_count}} kvissar på ClassQuiz.",
+        "stats": "Det er allereie {{user_count}} brukarar og {{quiz_count}} kvissar på QuickQuiz.",
         "see_how_many_true_and_false": "Sjå kor mange som hadde rett eller feil",
         "see_all_quizzes": "Sjå kvissane dine",
         "teachers_site": "Læraren si side",
@@ -156,20 +156,20 @@
         "multilingual": "Fleirspråkleg",
         "get_a_quiz": "1. Vel ein kviss",
         "find_or_explore": "Finn kvissar laga eller importert av andre",
-        "import_quiz_from_kahoot_and_edit": "Importer ein kviss frå Kahoot! og rediger han i ClassQuiz",
+        "import_quiz_from_kahoot_and_edit": "Importer ein kviss frå Kahoot! og rediger han i QuickQuiz",
         "play_quiz": "2. Spel kvissen",
         "select_answer": "Vel eit svar",
         "choose_answer_wisely": "Vel med omhug",
         "view_results": "Sjå resultata",
         "check_if_chosen_wisely": "Sjekk om du hadde rett",
         "list_winners": "List opp vinnarane",
-        "why_classquiz": "Kvifor ClassQuiz?",
+        "why_classquiz": "Kvifor QuickQuiz?",
         "self_hostable": "Køyr frå eigen vert",
         "dark_mode": "Mørk drakt",
-        "no_tracking_content": "Kahoot! sporar deg og sender info til tredjepart, det gjer ikkje ClassQuiz.",
+        "no_tracking_content": "Kahoot! sporar deg og sender info til tredjepart, det gjer ikkje QuickQuiz.",
         "slogan": "Den opne kvissplatformen!",
         "meta": {
-            "description": "ClassQuiz er ein kvissapp som Kahoot! for elever, som har open kjeldekode og er gratis",
+            "description": "QuickQuiz er ein kvissapp som Kahoot! for elever, som har open kjeldekode og er gratis",
             "title": "Heim"
         },
         "see_what_true_and_false": "Sjå kva som er rett og gale",

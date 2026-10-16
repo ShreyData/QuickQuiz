@@ -12,11 +12,16 @@ SPDX-License-Identifier: MPL-2.0
 	import QuizCard from '$lib/editor/card.svelte';
 	import Spinner from './Spinner.svelte';
 	import { getLocalization } from '$lib/i18n';
+	import { onMount } from 'svelte';
 
 	const { t } = getLocalization();
 
 	let schemaInvalid = $state(false);
 	let yupErrorMessage = $state('');
+	let editorInitializing = $state(true);
+	let initializationError = $state('');
+	let saving = $state(false);
+	let saveError = $state('');
 
 	interface Props {
 		data: EditorData;
@@ -39,27 +44,46 @@ SPDX-License-Identifier: MPL-2.0
 	$effect(() => {
 		validateInput(data);
 	});
-	let edit_id: string = $state();
+	let edit_id: string = $state('');
 	let confirm_to_leave = true;
 
 	const getEditID = async () => {
-		let res: Response;
-		if (quiz_id === null) {
-			res = await fetch(`/api/v1/editor/start?edit=false`, {
-				method: 'POST'
+		editorInitializing = true;
+		initializationError = '';
+		try {
+			const endpoint =
+				quiz_id === null
+					? '/api/v1/editor/start?edit=false'
+					: `/api/v1/editor/start?edit=true&quiz_id=${encodeURIComponent(quiz_id)}`;
+			const response = await fetch(endpoint, {
+				method: 'POST',
+				signal: AbortSignal.timeout(15_000)
 			});
-		} else {
-			res = await fetch(`/api/v1/editor/start?edit=true&quiz_id=${quiz_id}`, {
-				method: 'POST'
-			});
-		}
-		if (res.status === 200) {
-			const json = await res.json();
-			edit_id = json.token;
-		} else {
-			alert('Error!');
+			if (response.status === 401 || response.status === 403) {
+				throw new Error($t('editor.authentication_required'));
+			}
+			if (!response.ok) {
+				throw new Error($t('editor.start_failed', { status: response.status }));
+			}
+			const result: { token?: unknown } = await response.json();
+			if (typeof result.token !== 'string' || result.token.length === 0) {
+				throw new Error($t('editor.invalid_session'));
+			}
+			edit_id = result.token;
+		} catch (error) {
+			initializationError =
+				error instanceof Error && error.name === 'TimeoutError'
+					? $t('editor.start_timeout')
+					: error instanceof Error
+						? error.message
+						: $t('editor.connection_failed');
+		} finally {
+			editorInitializing = false;
 		}
 	};
+	onMount(() => {
+		void getEditID();
+	});
 
 	const confirmUnload = (event: BeforeUnloadEvent) => {
 		if (!confirm_to_leave) {
@@ -72,53 +96,87 @@ SPDX-License-Identifier: MPL-2.0
 	};
 	const saveQuiz = async (e: Event) => {
 		e.preventDefault();
-		if (schemaInvalid) {
+		if (schemaInvalid || saving) {
 			return;
 		}
-		const res = await fetch(`/api/v1/editor/finish?edit_id=${edit_id}`, {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json'
-			},
-			body: JSON.stringify(data)
-		});
-		if (res.ok) {
+		saving = true;
+		saveError = '';
+		try {
+			const response = await fetch(
+				`/api/v1/editor/finish?edit_id=${encodeURIComponent(edit_id)}`,
+				{
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					body: JSON.stringify(data),
+					signal: AbortSignal.timeout(30_000)
+				}
+			);
+			if (!response.ok) {
+				throw new Error($t('editor.save_http_failed', { status: response.status }));
+			}
 			confirm_to_leave = false;
-			console.log(confirm_to_leave);
-			window.location.href = '/dashboard';
-		} else {
-			alert('Error');
+			window.location.assign('/dashboard');
+		} catch (error) {
+			saveError =
+				error instanceof Error && error.name === 'TimeoutError'
+					? $t('editor.save_timeout')
+					: error instanceof Error
+						? error.message
+						: $t('editor.save_failed');
+		} finally {
+			saving = false;
 		}
 	};
 </script>
 
 <svelte:window onbeforeunload={confirmUnload} />
-{#await getEditID()}
-	<Spinner />
-{:then _}
+{#if editorInitializing}
+	<div class="flex min-h-screen flex-col items-center justify-center gap-3" role="status">
+		<Spinner />
+		<p>{$t('editor.preparing')}</p>
+	</div>
+{:else if initializationError}
+	<div
+		class="mx-auto flex min-h-screen max-w-xl flex-col items-center justify-center gap-4 px-6 text-center"
+	>
+		<h1 class="text-3xl font-bold">{$t('editor.open_failed')}</h1>
+		<p role="alert">{initializationError}</p>
+		<button
+			class="rounded-lg bg-[#4e6e58] px-5 py-3 font-semibold text-white hover:bg-[#3f5d49]"
+			type="button"
+			onclick={() => void getEditID()}>{$t('editor.retry')}</button
+		>
+	</div>
+{:else}
 	<form onsubmit={saveQuiz}>
-		<div class="grid grid-cols-6 h-screen w-screen">
-			<div>
+		<div
+			class="grid h-dvh w-full grid-cols-[minmax(14rem,18rem)_minmax(0,1fr)] overflow-hidden"
+		>
+			<div class="min-w-0 overflow-hidden">
 				<Sidebar bind:data bind:selected_question />
 			</div>
-			<div class="col-span-5 flex flex-col">
-				<div
-					class="h-10 w-full bg-white mb-10 flex align-middle justify-center rounded-br-lg"
-				>
+			<div class="flex min-w-0 flex-col overflow-hidden">
+				<div class="flex h-12 w-full shrink-0 items-center justify-center bg-white">
 					{#if schemaInvalid}
-						<p class="text-center w-full text-red-600 h-full mt-0.5 font-semibold">
+						<p class="w-full px-3 text-center font-semibold text-red-600">
 							{yupErrorMessage}
 						</p>
+					{:else if saveError}
+						<p class="w-full px-3 text-center font-semibold text-red-600" role="alert">
+							{saveError}
+						</p>
 					{:else}
-						<p class="text-center w-full text-black h-full align-bottom mt-0.5">
-							{@html data.title}
+						<p class="min-w-0 flex-1 truncate px-4 text-gray-900">
+							{@html data.title || 'Untitled quiz'}
 						</p>
 					{/if}
 					<button
-						class="pr-2 align-middle bg-[#B07156] pl-2 ml-auto whitespace-nowrap disabled:opacity-60 rounded-br-lg"
-						disabled={schemaInvalid}
+						class="ml-auto h-full whitespace-nowrap bg-[#B07156] px-4 text-white transition hover:bg-[#966047] disabled:cursor-not-allowed disabled:opacity-60"
+						disabled={schemaInvalid || saving}
 					>
-						<span>{$t('words.save')}</span>
+						<span>{saving ? $t('editor.saving') : $t('words.save')}</span>
 						<svg
 							class="w-6 h-6 inline-block"
 							fill="none"
@@ -135,7 +193,7 @@ SPDX-License-Identifier: MPL-2.0
 						</svg>
 					</button>
 				</div>
-				<div class="w-full h-full">
+				<div class="min-h-0 w-full flex-1 overflow-y-auto">
 					{#if selected_question === -1}
 						<SettingsCard bind:data bind:edit_id />
 					{:else}
@@ -145,4 +203,4 @@ SPDX-License-Identifier: MPL-2.0
 			</div>
 		</div>
 	</form>
-{/await}
+{/if}

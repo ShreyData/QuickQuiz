@@ -8,10 +8,7 @@ SPDX-License-Identifier: MPL-2.0
 	import { navbarVisible } from '$lib/stores.svelte.ts';
 	import { getLocalization } from '$lib/i18n';
 	import Footer from '$lib/footer.svelte';
-	import WebPOpenGraph from '$lib/assets/landing/opengraph-home.webp';
-	import JpgOpenGraph from '$lib/assets/landing/opengraph-home.jpg';
-	import Newsletter from '$lib/landing/newsletter.svelte';
-	import { fly, fade } from 'svelte/transition';
+	import { fade } from 'svelte/transition';
 
 	import FindScreenshot from '$lib/assets/landing_new/find.webp';
 	import ImportScreenshot from '$lib/assets/landing_new/import.webp';
@@ -19,17 +16,10 @@ SPDX-License-Identifier: MPL-2.0
 	import SelectScreenshot from '$lib/assets/landing_new/select.webp';
 	import ResultScreenshot from '$lib/assets/landing_new/result.webp';
 	import WinnersScreenshot from '$lib/assets/landing_new/winners.webp';
-	import { onMount } from 'svelte';
 
 	const { t } = getLocalization();
 
 	navbarVisible.visible = true;
-
-	let newsletterModalOpen: boolean = $state();
-	onMount(() => {
-		const ls = localStorage.getItem('newsletter');
-		newsletterModalOpen = ls === null;
-	});
 
 	// eslint-disable-next-line no-unused-vars
 	enum SelectedCreateThing {
@@ -54,7 +44,7 @@ SPDX-License-Identifier: MPL-2.0
 	let selected_create_thing = $state(SelectedCreateThing.Create);
 	let selected_play_thing = $state(SelectedPlayThing.Select);
 
-	const classquiz_reasons = [
+	const quickquiz_reasons = [
 		{
 			headline: $t('index_page.no_player_limit'),
 			content: $t('index_page.no_player_limit_content')
@@ -68,16 +58,8 @@ SPDX-License-Identifier: MPL-2.0
 			content: $t('index_page.self_hostable_content')
 		},
 		{
-			headline: $t('index_page.german_server'),
-			content: $t('index_page.german_server_content')
-		},
-		{
 			headline: $t('index_page.user_friendly'),
 			content: $t('index_page.user_friendly_content')
-		},
-		{
-			headline: $t('index_page.completely_free'),
-			content: $t('index_page.completely_free_content')
 		},
 		{
 			headline: $t('index_page.quiz_results_downloadable'),
@@ -94,48 +76,38 @@ SPDX-License-Identifier: MPL-2.0
 		{
 			headline: $t('index_page.download_quizzes'),
 			content: $t('index_page.download_quizzes_content')
-		},
-		{
-			headline: $t('index_page.community_driven'),
-			content: $t('index_page.community_driven_content')
 		}
 	];
-	let selected_classquiz_reason = $state(0);
+	let selected_quickquiz_reason = $state(0);
 </script>
 
 <svelte:head>
-	<title>ClassQuiz - {$t('index_page.meta.title')}</title>
+	<title>QuickQuiz - {$t('index_page.meta.title')}</title>
 	<meta name="description" content={$t('index_page.meta.description')} />
-	<title>ClassQuiz - Home</title>
-	<meta
-		name="description"
-		content="ClassQuiz is a quiz-application like KAHOOT!, but open-source. You can create quizzes and play them remotely with other people."
-	/>
-
-	<meta property="og:url" content="https://classquiz.de/" />
 	<meta property="og:type" content="website" />
-	<meta property="og:title" content="ClassQuiz - {$t('index_page.meta.title')}" />
-	<meta
-		property="og:description"
-		content="ClassQuiz is a quiz-application like KAHOOT!, but open-source. You can create quizzes and play them remotely with other people."
-	/>
-	<meta property="og:image" content={JpgOpenGraph} />
-
+	<meta property="og:title" content="QuickQuiz - {$t('index_page.meta.title')}" />
+	<meta property="og:description" content={$t('index_page.meta.description')} />
 	<meta name="twitter:card" content="summary_large_image" />
-	<meta property="twitter:domain" content="classquiz.de" />
-	<meta property="twitter:url" content="https://classquiz.de/" />
-	<meta name="twitter:title" content="ClassQuiz - {$t('index_page.meta.title')}" />
-	<meta
-		name="twitter:description"
-		content="ClassQuiz is a quiz-application like KAHOOT!, but open-source. You can create quizzes and play them remotely with other people."
-	/>
-	<meta name="twitter:image" content={WebPOpenGraph} />
+	<meta name="twitter:title" content="QuickQuiz - {$t('index_page.meta.title')}" />
+	<meta name="twitter:description" content={$t('index_page.meta.description')} />
 </svelte:head>
 <div class="min-h-screen flex flex-col">
-	<section class="pb-40">
+	<section class="pb-20">
 		<div class="pt-12 text-center">
-			<h1 class="sm:text-8xl text-6xl mt-6 marck-script">ClassQuiz</h1>
+			<h1 class="sm:text-7xl text-5xl mt-6 font-bold tracking-tight">QuickQuiz</h1>
 			<p class="text-xl mt-4">{$t('index_page.slogan')}</p>
+			<div class="mt-8 flex flex-wrap justify-center gap-3">
+				<a
+					href="/create"
+					class="rounded-lg bg-[#4e6e58] px-6 py-3 font-semibold text-white shadow transition hover:bg-[#3f5d49] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
+					>{$t('words.create')}</a
+				>
+				<a
+					href="/explore"
+					class="rounded-lg border border-gray-700 bg-white/70 px-6 py-3 font-semibold text-gray-900 transition hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
+					>{$t('words.explore')}</a
+				>
+			</div>
 		</div>
 	</section>
 	<section>
@@ -407,7 +379,7 @@ SPDX-License-Identifier: MPL-2.0
 	<section class="mt-24">
 		<div class="flex justify-center w-full">
 			<h2 class="text-center text-3xl rounded-t-lg bg-white/40 py-2 px-6">
-				{$t('index_page.why_classquiz')}
+				QuickQuiz highlights
 			</h2>
 		</div>
 
@@ -417,26 +389,26 @@ SPDX-License-Identifier: MPL-2.0
 			<div>
 				<div class="p-12 rounded-lg flex justify-center items-center h-full">
 					<p class="dark:text-black">
-						{classquiz_reasons[selected_classquiz_reason].content}
+						{quickquiz_reasons[selected_quickquiz_reason].content}
 					</p>
 				</div>
 			</div>
 			<div
-				class="lg:border-l lg:border-l-black lg:border-t-0 border-t border-t-black flex lg:flex-col flex-row stretch overflow-x-auto why-classquiz"
+				class="lg:border-l lg:border-l-black lg:border-t-0 border-t border-t-black flex lg:flex-col flex-row stretch overflow-x-auto why-quickquiz"
 			>
-				{#each classquiz_reasons as reason, index}
+				{#each quickquiz_reasons as reason, index}
 					<div
 						class="m-2 rounded-lg p-2 bg-white/40 transition-all cursor-pointer lg:h-full"
 						role="button"
 						tabindex="0"
 						onclick={() => {
-							selected_classquiz_reason = index;
+							selected_quickquiz_reason = index;
 						}}
 						onkeyup={() => {
-							selected_classquiz_reason = index;
+							selected_quickquiz_reason = index;
 						}}
-						class:shadow-2xl={selected_classquiz_reason === index}
-						class:opacity-70={selected_classquiz_reason !== index}
+						class:shadow-2xl={selected_quickquiz_reason === index}
+						class:opacity-70={selected_quickquiz_reason !== index}
 					>
 						<h5 class="text-xl dark:text-black">{reason.headline}</h5>
 					</div>
@@ -445,34 +417,26 @@ SPDX-License-Identifier: MPL-2.0
 		</div>
 	</section>
 </div>
-{#if newsletterModalOpen}
-	<div
-		class="fixed bottom-8 right-5 bg-white rounded-lg h-fit w-11/12 ml-5 lg:w-2/12 z-50 p-2 dark:bg-gray-700"
-		transition:fly|global
-	>
-		<Newsletter bind:open={newsletterModalOpen} />
-	</div>
-{/if}
 <Footer />
 
 <style>
-	.why-classquiz::-webkit-scrollbar {
+	.why-quickquiz::-webkit-scrollbar {
 		height: 0.8rem;
 		margin-bottom: 5rem;
 	}
 
-	.why-classquiz::-webkit-scrollbar-track {
+	.why-quickquiz::-webkit-scrollbar-track {
 		box-shadow: inset 0 0 10px 10px transparent;
 		border: solid 3px transparent;
 	}
 
-	.why-classquiz::-webkit-scrollbar-thumb {
+	.why-quickquiz::-webkit-scrollbar-thumb {
 		box-shadow: inset 0 0 10px 10px #374151;
 		border: solid 3px transparent;
 		border-radius: 15px;
 	}
 
-	.why-classquiz::-webkit-scrollbar-thumb:hover {
+	.why-quickquiz::-webkit-scrollbar-thumb:hover {
 		box-shadow: inset 0 0 10px 10px #555;
 		border: solid 3px transparent;
 	}

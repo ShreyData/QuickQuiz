@@ -11,18 +11,23 @@ SPDX-License-Identifier: MPL-2.0
 	import { fade } from 'svelte/transition';
 	import { getLocalization } from '$lib/i18n';
 
-
 	interface Props {
 		questions: Question[];
 		open: boolean;
 		selected_question: number;
 	}
 
-	let { questions = $bindable(), open = $bindable(), selected_question = $bindable() }: Props = $props();
+	let {
+		questions = $bindable(),
+		open = $bindable(),
+		selected_question = $bindable()
+	}: Props = $props();
 
 	const { t } = getLocalization();
 	onMount(() => {
 		document.body.addEventListener('keydown', close_start_game_if_esc_is_pressed);
+		return () =>
+			document.body.removeEventListener('keydown', close_start_game_if_esc_is_pressed);
 	});
 	const close_start_game_if_esc_is_pressed = (key: KeyboardEvent) => {
 		if (key.code === 'Escape') {
@@ -102,21 +107,37 @@ SPDX-License-Identifier: MPL-2.0
 	class="fixed top-0 left-0 w-screen h-screen flex bg-black/50 z-50"
 	onclick={on_parent_click}
 	transition:fade={{ duration: 100 }}
+	role="presentation"
 >
 	<div
-		class="m-auto w-2/3 h-5/6 rounded-sm shadow-2xl bg-white dark:bg-gray-600 p-6 flex flex-col"
+		class="m-auto flex h-[85vh] w-[calc(100%-2rem)] max-w-5xl flex-col rounded-lg bg-white p-4 shadow-2xl dark:bg-gray-600 sm:p-6"
+		role="dialog"
+		aria-modal="true"
+		aria-labelledby="question-type-title"
 	>
-		<h1 class="text-center text-3xl mb-6">{$t('quiztivity.editor.select_page_type')}</h1>
-		<div class="grid grid-cols-4 gap-4 overflow-y-scroll">
+		<div class="mb-6 flex items-start justify-between gap-4">
+			<h1 class="text-2xl font-semibold sm:text-3xl" id="question-type-title">
+				{$t('quiztivity.editor.select_page_type')}
+			</h1>
+			<button
+				class="rounded-lg px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-500"
+				type="button"
+				onclick={() => (open = false)}
+				aria-label="Close question type selector">Close</button
+			>
+		</div>
+		<div class="grid grid-cols-1 gap-3 overflow-y-auto sm:grid-cols-2 lg:grid-cols-3">
 			{#each question_types as qt, i}
-				<div class="rounded-sm p-6 border-[#B07156] border">
+				<div
+					class="rounded-lg border border-[#B07156] p-4 transition hover:bg-[#d6edc9]/40"
+				>
 					<button
-						class="text-xl text-black dark:text-white"
+						class="w-full text-left text-lg font-semibold text-black dark:text-white"
 						onclick={() => {
 							add_question(i);
 						}}>{qt.name}</button
 					>
-					<p class="text-sm">{qt.description}</p>
+					<p class="mt-2 text-sm text-gray-700 dark:text-gray-200">{qt.description}</p>
 				</div>
 			{/each}
 		</div>

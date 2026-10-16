@@ -5,11 +5,8 @@ SPDX-License-Identifier: MPL-2.0
 -->
 
 <svelte:head>
-	<title>ClassQuiz/docs - Roadmap</title>
-	<meta
-		name="description"
-		content="The roadmap for ClassQuiz, the open-source quiz-application"
-	/>
+	<title>QuickQuiz - Roadmap</title>
+	<meta name="description" content="The QuickQuiz project roadmap." />
 </svelte:head>
 <article
 	class="prose prose-sm sm:prose lg:prose-lg xl:prose-xl mx-auto mt-10 prose-slate px-4 dark:prose-invert"

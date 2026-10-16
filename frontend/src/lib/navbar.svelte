@@ -9,7 +9,6 @@ SPDX-License-Identifier: MPL-2.0
 	import { getLocalization } from '$lib/i18n';
 	import { signedIn, pathname } from '$lib/stores';
 	import { createTippy } from 'svelte-tippy';
-	import BrownButton from '$lib/components/buttons/brown.svelte';
 	import { browser } from '$app/environment';
 	import { beforeNavigate } from '$app/navigation';
 	import { draw, slide } from 'svelte/transition';
@@ -52,8 +51,8 @@ SPDX-License-Identifier: MPL-2.0
 		<div class="lg:flex lg:items-center lg:flex-row gap-1">
 			<a
 				href="/"
-				class="font-black tracking-tight text-xl lg:text-2xl text-black marck-script link-hover px-3 lg:px-5"
-				>ClassQuiz</a
+				class="flex items-center gap-2 font-black tracking-tight text-xl lg:text-2xl text-black link-hover px-3 lg:px-5"
+				><img src="/quickquiz-mark.svg" alt="" class="h-8 w-8" />QuickQuiz</a
 			>
 			<a class="btn-nav border-2 rounded-sm" href="/play">{$t('words.play')}</a>
 			<a class="btn-nav" href="/explore">{$t('words.explore')}</a>
@@ -65,7 +64,8 @@ SPDX-License-Identifier: MPL-2.0
 				<a
 					target="_blank"
 					class="btn-nav flex items-center gap-1"
-					href="https://github.com/mawoka-myblock/ClassQuiz"
+					href="https://github.com/ShreyData/QuickQuiz"
+					rel="noopener noreferrer"
 					>GitHub
 					<svg
 						xmlns="http://www.w3.org/2000/svg"
@@ -103,9 +103,6 @@ SPDX-License-Identifier: MPL-2.0
 			{/if}
 
 			<div class="fit-content flex items-center justify-center gap-2">
-				<BrownButton href="https://mawoka.eu/donate" target="_blank"
-					>{$t('navbar.donate')} <span class="">❤️</span></BrownButton
-				>
 				<div class="lg:flex items-center justify-center">
 					{#if darkMode}
 						<button
@@ -170,8 +167,8 @@ SPDX-License-Identifier: MPL-2.0
 		<div class="flex items-center justify-between">
 			<a
 				href="/"
-				class="font-black tracking-tight text-xl lg:text-2xl text-black marck-script link-hover px-3 lg:px-5"
-				>ClassQuiz</a
+				class="flex items-center gap-2 font-black tracking-tight text-xl lg:text-2xl text-black link-hover px-3 lg:px-5"
+				><img src="/quickquiz-mark.svg" alt="" class="h-8 w-8" />QuickQuiz</a
 			>
 			<a class="btn-nav flex" href="/play">{$t('words.play')}</a>
 
@@ -294,7 +291,8 @@ SPDX-License-Identifier: MPL-2.0
 					<a
 						target="_blank"
 						class="btn-nav flex items-center gap-1"
-						href="https://github.com/mawoka-myblock/ClassQuiz"
+						href="https://github.com/ShreyData/QuickQuiz"
+						rel="noopener noreferrer"
 						>GitHub
 						<svg
 							xmlns="http://www.w3.org/2000/svg"
@@ -331,12 +329,6 @@ SPDX-License-Identifier: MPL-2.0
 						>{$t('words.login')}</a
 					>
 				{/if}
-
-				<div class="fit-content flex items-center justify-center my-2">
-					<BrownButton href="https://mawoka.eu/donate" target="_blank"
-						>{$t('navbar.donate')} <span class="">❤️</span></BrownButton
-					>
-				</div>
 			</div>
 		{/if}
 	</div>

@@ -54,6 +54,5 @@ export const mint = async (
 	}
 	const t2 = performance.now();
 	// eslint-disable-next-line no-undef
-	plausible('Hashcash', { props: { ms_taken: t2 - t1 } });
 	return `${challenge}:${result}`;
 };

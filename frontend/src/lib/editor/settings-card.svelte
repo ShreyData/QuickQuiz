@@ -9,6 +9,8 @@ SPDX-License-Identifier: MPL-2.0
 	import { getLocalization } from '$lib/i18n';
 	import Spinner from '$lib/Spinner.svelte';
 	import { createTippy } from 'svelte-tippy';
+	import LoadError from '$lib/editor/LoadError.svelte';
+	import { loadEditorComponent } from '$lib/editor/loadEditorComponent';
 
 	const { t } = getLocalization();
 
@@ -33,8 +35,8 @@ SPDX-License-Identifier: MPL-2.0
 	});
 </script>
 
-<div class="w-full h-full pb-20 px-20">
-	<div class="rounded-lg bg-white w-full h-full border-gray-500 dark:bg-gray-700">
+<div class="min-h-full w-full px-4 pb-10 sm:px-8 xl:px-12">
+	<div class="min-h-full rounded-lg bg-white w-full border-gray-500 dark:bg-gray-700">
 		<div class="h-fit bg-gray-300 rounded-t-lg dark:bg-gray-500">
 			<div class="flex align-middle p-4 gap-3">
 				<span
@@ -55,10 +57,12 @@ SPDX-License-Identifier: MPL-2.0
 				: `unset`}"
 		>
 			<div class="flex justify-center pt-10 w-full">
-				{#await import('$lib/inline-editor.svelte')}
+				{#await loadEditorComponent(import('$lib/inline-editor.svelte'))}
 					<Spinner my_20={false} />
 				{:then c}
 					<c.default bind:text={data.title} />
+				{:catch}
+					<LoadError />
 				{/await}
 			</div>
 			<div class="flex justify-center pt-10 w-full max-h-32">
@@ -82,10 +86,12 @@ SPDX-License-Identifier: MPL-2.0
 					/>
 				</div>
 			{:else}
-				{#await import('$lib/editor/uploader.svelte')}
+				{#await loadEditorComponent(import('$lib/editor/uploader.svelte'))}
 					<Spinner my_20={false} />
 				{:then c}
 					<c.default bind:modalOpen={uppyOpen} {data} video_upload={false} />
+				{:catch}
+					<LoadError />
 				{/await}
 			{/if}
 			<div class="pt-10 w-full flex justify-center">
@@ -189,7 +195,7 @@ SPDX-License-Identifier: MPL-2.0
 						>Remove Background-Image
 					</button>
 				{:else}
-					{#await import('$lib/editor/uploader.svelte')}
+					{#await loadEditorComponent(import('$lib/editor/uploader.svelte'))}
 						<div class="pt-10">
 							<Spinner my_20={false} />
 						</div>
@@ -200,6 +206,8 @@ SPDX-License-Identifier: MPL-2.0
 							selected_question={-1}
 							video_upload={false}
 						/>
+					{:catch}
+						<LoadError />
 					{/await}
 				{/if}
 			</div>

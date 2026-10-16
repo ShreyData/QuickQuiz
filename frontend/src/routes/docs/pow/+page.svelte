@@ -5,11 +5,8 @@ SPDX-License-Identifier: MPL-2.0
 -->
 
 <svelte:head>
-	<title>ClassQuiz/docs - PoW</title>
-	<meta
-		name="description"
-		content="Use-case of PoW for ClassQuiz, the open-source quiz-application"
-	/>
+	<title>QuickQuiz - Proof of work</title>
+	<meta name="description" content="How proof of work is used in QuickQuiz." />
 </svelte:head>
 <article
 	class="prose prose-sm sm:prose lg:prose-lg xl:prose-xl mx-auto mt-10 prose-slate px-4 dark:prose-invert"
@@ -26,7 +23,7 @@ SPDX-License-Identifier: MPL-2.0
 	<h2 id="technical">Technical Part</h2>
 	<p>
 		The technique used, is called PoW, or Proof of Work. It is a way to "pay" for something by
-		using your CPU. It's mainly used in crypto-stuff, but not in ClassQuiz. It's just used to
+		using your CPU. It's mainly used in crypto-stuff, but not in QuickQuiz. It's just used to
 		prevent spam. Imagine it like a small fee you have to pay to upload an image, but you don't
 		pay with money, instead by using your CPU intensively. The Proof of Work-algorythm used is
 		called HashCash and is also used by Bitcoin. All in all, it's really simple (if you know

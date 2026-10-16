@@ -77,7 +77,7 @@ SPDX-License-Identifier: MPL-2.0
 </script>
 
 <svelte:head>
-	<title>ClassQuiz - View {quiz.title}</title>
+	<title>QuickQuiz - View {quiz.title}</title>
 </svelte:head>
 
 <div>
@@ -230,7 +230,9 @@ SPDX-License-Identifier: MPL-2.0
 		</div>
 		<div class="flex justify-center">
 			<a
-				href="mailto:report@mawoka.eu?subject=Report quiz {quiz.id}"
+				href="https://github.com/ShreyData/QuickQuiz/issues/new"
+				target="_blank"
+				rel="noopener noreferrer"
 				class="text-sm underline"
 			>
 				{$t('words.report')}

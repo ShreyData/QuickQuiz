@@ -9,6 +9,8 @@ SPDX-License-Identifier: MPL-2.0
 
 	import type { EditorData } from '../quiz_types';
 	import Spinner from '../Spinner.svelte';
+	import LoadError from '$lib/editor/LoadError.svelte';
+	import { loadEditorComponent } from '$lib/editor/loadEditorComponent';
 
 	interface Props {
 		selected_question: number;
@@ -47,10 +49,6 @@ SPDX-License-Identifier: MPL-2.0
 				? 0
 				: data.questions[selected_question].answers.max;
 	});
-
-	function sleep(ms) {
-		return new Promise((resolve) => setTimeout(resolve, ms));
-	}
 </script>
 
 <div class="w-full mx-8">
@@ -73,22 +71,20 @@ SPDX-License-Identifier: MPL-2.0
 	<div class="w-full">
 		<!--		<RangeSlider bind:value={range_arr} bind:min={answer.min} bind:max={answer.max} range={true} slider={lol} /> -->
 
-		{#await import('svelte-range-slider-pips')}
+		{#await loadEditorComponent(import('svelte-range-slider-pips'))}
 			<Spinner my_20={false} />
 		{:then c}
-			{#await sleep(100)}
-				<Spinner my_20={false} />
-			{:then _}
-				<c.default
-					bind:values={range_arr}
-					bind:min={data.questions[selected_question].answers.min}
-					bind:max={data.questions[selected_question].answers.max}
-					pips
-					float
-					all="label"
-					range
-				/>
-			{/await}
+			<c.default
+				bind:values={range_arr}
+				bind:min={data.questions[selected_question].answers.min}
+				bind:max={data.questions[selected_question].answers.max}
+				pips
+				float
+				all="label"
+				range
+			/>
+		{:catch}
+			<LoadError />
 		{/await}
 	</div>
 </div>

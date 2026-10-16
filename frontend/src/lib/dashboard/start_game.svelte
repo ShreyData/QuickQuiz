@@ -70,7 +70,6 @@ SPDX-License-Identifier: MPL-2.0
 		} else {
 			const data = await res.json();
 			// eslint-disable-next-line no-undef
-			plausible('Started Game', { props: { quiz_id: id, game_id: data.game_id } });
 			window.location.assign(
 				`/admin?token=${data.game_id}&pin=${data.game_pin}&connect=1&cqc_code=${data.cqc_code}`
 			);
@@ -205,9 +204,9 @@ SPDX-License-Identifier: MPL-2.0
 						target="_blank"
 						use:tippy={{
 							content:
-								'ClassQuizControllers are small physical devices to play ClassQuiz. Click to learn more.'
+								'QuickQuiz Controllers are small physical devices for playing QuickQuiz. Click to learn more.'
 						}}
-						class="decoration-dashed underline cursor-help">ClassQuizControllers</a
+						class="decoration-dashed underline cursor-help">QuickQuiz Controllers</a
 					>
 					are {cqcs_enabled ? 'enabled' : 'disabled'}</span
 				>

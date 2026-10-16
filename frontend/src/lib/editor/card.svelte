@@ -18,6 +18,8 @@ SPDX-License-Identifier: MPL-2.0
 	import MediaComponent from '$lib/editor/MediaComponent.svelte';
 	import { fade } from 'svelte/transition';
 	import BrownButton from '$lib/components/buttons/brown.svelte';
+	import LoadError from '$lib/editor/LoadError.svelte';
+	import { loadEditorComponent } from '$lib/editor/loadEditorComponent';
 	// import MediaComponent from "$lib/editor/MediaComponent.svelte";
 
 	const { t } = getLocalization();
@@ -139,17 +141,19 @@ SPDX-License-Identifier: MPL-2.0
 			</div>
 		</div>
 		{#if data.questions[selected_question].type === QuizQuestionType.SLIDE}
-			{#await import('./slide.svelte')}
+			{#await loadEditorComponent(import('./slide.svelte'))}
 				<Spinner my_20={false} />
 			{:then c}
 				<c.default bind:data={data.questions[selected_question]} />
+			{:catch}
+				<LoadError />
 			{/await}
 		{:else}
 			{@const type = data.questions[selected_question].type}
 			<div class="flex flex-col">
 				<div class="flex justify-center pt-10 w-full">
 					{#key unique}
-						{#await import('$lib/inline-editor.svelte')}
+						{#await loadEditorComponent(import('$lib/inline-editor.svelte'))}
 							<Spinner my_20={false} />
 						{:then c}
 							<div
@@ -161,6 +165,8 @@ SPDX-License-Identifier: MPL-2.0
 							>
 								<c.default bind:text={data.questions[selected_question].question} />
 							</div>
+						{:catch}
+							<LoadError />
 						{/await}
 					{/key}
 				</div>
@@ -193,7 +199,7 @@ SPDX-License-Identifier: MPL-2.0
 						</div>
 					</div>
 				{:else}
-					{#await import('$lib/editor/uploader.svelte')}
+					{#await loadEditorComponent(import('$lib/editor/uploader.svelte'))}
 						<Spinner my_20={false} />
 					{:then c}
 						<c.default
@@ -203,6 +209,8 @@ SPDX-License-Identifier: MPL-2.0
 							bind:selected_question
 							video_upload={true}
 						/>
+					{:catch}
+						<LoadError />
 					{/await}
 				{/if}
 				<div class="flex justify-center pt-10 w-full">
@@ -236,7 +244,7 @@ SPDX-License-Identifier: MPL-2.0
 				</div>
 				<div class="flex justify-center w-full">
 					{#if type === QuizQuestionType.ABCD || type === QuizQuestionType.CHECK}
-						{#await import('$lib/editor/ABCDEditorPart.svelte')}
+						{#await loadEditorComponent(import('$lib/editor/ABCDEditorPart.svelte'))}
 							<Spinner my_20={false} />
 						{:then c}
 							<c.default
@@ -244,26 +252,34 @@ SPDX-License-Identifier: MPL-2.0
 								bind:selected_question
 								check_choice={type === QuizQuestionType.CHECK}
 							/>
+						{:catch}
+							<LoadError />
 						{/await}
 					{:else if type === QuizQuestionType.RANGE}
 						<RangeEditor bind:selected_question bind:data />
 					{:else if type === QuizQuestionType.VOTING}
-						{#await import('$lib/editor/VotingEditorPart.svelte')}
+						{#await loadEditorComponent(import('$lib/editor/VotingEditorPart.svelte'))}
 							<Spinner my_20={false} />
 						{:then c}
 							<c.default bind:data bind:selected_question />
+						{:catch}
+							<LoadError />
 						{/await}
 					{:else if type === QuizQuestionType.TEXT}
-						{#await import('$lib/editor/TextEditorPart.svelte')}
+						{#await loadEditorComponent(import('$lib/editor/TextEditorPart.svelte'))}
 							<Spinner my_20={false} />
 						{:then c}
 							<c.default bind:data bind:selected_question />
+						{:catch}
+							<LoadError />
 						{/await}
 					{:else if type === QuizQuestionType.ORDER}
-						{#await import('$lib/editor/OrderEditorPart.svelte')}
+						{#await loadEditorComponent(import('$lib/editor/OrderEditorPart.svelte'))}
 							<Spinner my_20={false} />
 						{:then c}
 							<c.default bind:data bind:selected_question />
+						{:catch}
+							<LoadError />
 						{/await}
 					{/if}
 				</div>
