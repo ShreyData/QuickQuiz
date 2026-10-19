@@ -5,259 +5,228 @@ SPDX-License-Identifier: MPL-2.0
 -->
 
 <script lang="ts">
+	import { resolve } from '$app/paths';
+	import { page } from '$app/state';
+	import { goto } from '$app/navigation';
 	import { getLocalization } from '$lib/i18n';
 	import { navbarVisible } from '$lib/stores.svelte.ts';
-	import { onMount } from 'svelte';
-	import { page } from '$app/state';
+
+	const { t } = getLocalization();
+	const kahootRegex = /^https:\/\/create\.kahoot\.it\/details\/.*\/?([a-zA-Z-\d]{36})\/?$/;
+
+	let urlInput = $state(page.url.searchParams.get('url') ?? '');
+	let selectedFiles: FileList | null = $state(null);
+	let isLoading = $state(false);
+	let errorMessage = $state('');
+	let successMessage = $state('');
+	let urlValid = $derived(kahootRegex.test(urlInput.trim()));
+	let fileExtension = $derived(selectedFiles?.[0]?.name.split('.').pop()?.toLowerCase() ?? '');
+	let fileValid = $derived(fileExtension === 'xlsx' || fileExtension === 'cqa');
 
 	navbarVisible.visible = true;
 
-	const { t } = getLocalization();
-	let url_input = $state('');
-	let file_input: File[] = $state();
-	let kahoot_regex = /^https:\/\/create\.kahoot\.it\/details\/.*\/?([a-zA-Z-\d]{36})\/?$/;
-
-	let url_valid = $derived(kahoot_regex.test(url_input));
-	let is_loading = $state(false);
-
-	const submit = async (e: Event) => {
-		e.preventDefault();
-		if (!url_valid) {
-			return;
+	const responseMessage = async (response: Response, fallback: string) => {
+		try {
+			const body: { detail?: unknown; message?: unknown } = await response.json();
+			const message = body.detail ?? body.message;
+			if (typeof message === 'string') return message;
+		} catch {
+			// Some upstream import failures return an empty or non-JSON response.
 		}
-		is_loading = true;
-		const regex_res = kahoot_regex.exec(url_input);
-		const res = await fetch(`/api/v1/quiz/import/${regex_res[1]}`, {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json'
+		return `${fallback} (${response.status}).`;
+	};
+
+	const importKahoot = async (event: SubmitEvent) => {
+		event.preventDefault();
+		const match = kahootRegex.exec(urlInput.trim());
+		if (!match || isLoading) return;
+
+		isLoading = true;
+		errorMessage = '';
+		successMessage = '';
+		try {
+			const response = await fetch(`/api/v1/quiz/import/${encodeURIComponent(match[1])}`, {
+				method: 'POST',
+				signal: AbortSignal.timeout(120_000)
+			});
+			if (!response.ok) {
+				throw new Error(
+					await responseMessage(response, 'Could not import this Kahoot quiz')
+				);
 			}
-		});
-
-		if (res.status === 200) {
-			window.location.href = '/dashboard';
-		} else if (res.status === 400) {
-			/*			alertModal.set({
-				open: true,
-				title: 'Import failed',
-				body: "This quiz isn't (yet) supported!"
-			});*/
-			alert("This quiz isn't (yet) supported!");
-		} else if (res.status === 403) {
-			/*			alertModal.set({
-				open: true,
-				title: 'Import failed',
-				body: 'Unknown error while importing the quiz!'
-			});*/
-			alert('Quiz is probably private!');
-		} else {
-			alert(`Kahoot replied with ${res.status}`);
+			successMessage = 'Quiz imported. Opening your library…';
+			await goto(resolve('/dashboard'));
+		} catch (error) {
+			errorMessage =
+				error instanceof Error ? error.message : 'Import failed. Please try again.';
+		} finally {
+			isLoading = false;
 		}
-		is_loading = false;
 	};
 
-	const file_submit = async (e: Event) => {
-		e.preventDefault();
-		is_loading = true;
-		const formdata = new FormData();
-		formdata.append('file', file_input[0]);
-		let res;
-		if (file_input[0].name.includes('.xlsx')) {
-			res = await fetch('/api/v1/quiz/excel-import', {
-				method: 'POST',
-				body: formdata
-			});
-		} else if (file_input[0].name.includes('.cqa')) {
-			res = await fetch('/api/v1/eximport/', {
-				method: 'POST',
-				body: formdata
-			});
-		} else {
-			alert('Wrong file type');
-			is_loading = false;
-			return;
-		}
+	const importFile = async (event: SubmitEvent) => {
+		event.preventDefault();
+		const file = selectedFiles?.[0];
+		if (!file || !fileValid || isLoading) return;
 
-		if (res.status === 200) {
-			window.location.href = '/dashboard';
-		} else {
-			/*			alertModal.set({
-				open: true,
-				title: 'Import failed',
-				body: 'Something went wrong!'
-			});*/
-			alert('Something went wrong!');
+		isLoading = true;
+		errorMessage = '';
+		successMessage = '';
+		try {
+			const formData = new FormData();
+			formData.append('file', file);
+			const endpoint =
+				fileExtension === 'xlsx' ? '/api/v1/quiz/excel-import' : '/api/v1/eximport/';
+			const response = await fetch(endpoint, {
+				method: 'POST',
+				body: formData,
+				signal: AbortSignal.timeout(120_000)
+			});
+			if (!response.ok) {
+				throw new Error(await responseMessage(response, 'Could not import this file'));
+			}
+			successMessage = 'Quiz imported. Opening your library…';
+			await goto(resolve('/dashboard'));
+		} catch (error) {
+			errorMessage =
+				error instanceof Error ? error.message : 'Import failed. Please try again.';
+		} finally {
+			isLoading = false;
 		}
-		is_loading = false;
 	};
-
-	onMount(() => {
-		let url_from_path = page.url.searchParams.get('url');
-		if (url_from_path === '') {
-			url_from_path = null;
-		}
-		url_input = url_from_path ?? '';
-	});
 </script>
 
 <svelte:head>
-	<title>QuickQuiz - Import</title>
+	<title>QuickQuiz - Import a quiz</title>
+	<meta
+		name="description"
+		content="Bring a quiz into QuickQuiz from Kahoot, Excel, or a QuickQuiz export."
+	/>
 </svelte:head>
 
-<div class="flex items-center justify-center h-full px-4">
-	<div>
-		<span class="p-4"></span>
+<main class="qq-container min-h-[70vh] py-8 sm:py-12">
+	<header class="mb-8">
+		<p class="qq-display mb-1 text-2xl text-[var(--qq-green)]">Bring your questions along</p>
+		<h1 class="qq-page-heading">Import a quiz</h1>
+		<p class="mt-2 max-w-2xl text-[var(--qq-muted)]">
+			Choose the source that matches your quiz. Your original file is not modified.
+		</p>
+	</header>
 
-		<div
-			class="lg:w-[64rem] lg:max-w-[64rem] w-screen max-w-screen mx-auto overflow-hidden bg-white rounded-lg shadow-md dark:bg-gray-800"
+	{#if errorMessage}
+		<p class="mb-5 rounded-xl border border-red-300 bg-red-50 p-4 text-red-900" role="alert">
+			{errorMessage}
+		</p>
+	{/if}
+	{#if successMessage}
+		<p
+			class="mb-5 rounded-xl border border-green-300 bg-green-50 p-4 text-green-950"
+			role="status"
 		>
-			<div class="px-6 py-4">
-				<h2 class="text-3xl font-bold text-center text-gray-700 dark:text-white">
-					{$t('words.import')}
-				</h2>
+			{successMessage}
+		</p>
+	{/if}
 
-				<!--				<h3 class="mt-1 text-xl font-medium text-center text-gray-600 dark:text-gray-200">
-									Welcome Back
-								</h3>-->
-
-				<!--				<p class="mt-1 text-center text-gray-500 dark:text-gray-400">
-									Login or create account
-								</p>-->
-				<div class="grid grid-cols-2">
-					<form onsubmit={submit}>
-						<div class="w-full mt-4 h-full flex flex-col">
-							<h2 class="text-center text-2xl">{$t('import_page.a_kahoot_quiz')}</h2>
-							<div class="dark:bg-gray-800 bg-white p-4 rounded-lg">
-								<div class="relative bg-inherit w-full">
-									<input
-										id="url"
-										bind:value={url_input}
-										name="email"
-										type="url"
-										class="w-full peer bg-transparent h-10 rounded-lg text-gray-700 dark:text-white placeholder-transparent ring-2 px-2 ring-gray-500 focus:ring-sky-600 focus:outline-hidden focus:border-rose-600"
-										placeholder="https://create.kahoot.it/details/something"
-										class:ring-red-700={!url_valid}
-										class:ring-green-600={url_valid}
-									/>
-									<label
-										for="url"
-										class="absolute cursor-text left-0 -top-3 text-sm text-gray-700 dark:text-white bg-inherit mx-1 px-1 peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-500 peer-placeholder-shown:top-2 peer-focus:-top-3 peer-focus:text-sky-600 peer-focus:text-sm transition-all"
-									>
-										{$t('words.url')}
-									</label>
-									<p class="text-sm">
-										{$t('import_page.url_should_look_like_this')}
-									</p>
-								</div>
-								<p class="mt-2">
-									{$t('import_page.side_import_kahoot')}
-								</p>
-							</div>
-
-							<div class="flex items-center justify-center mt-auto">
-								<span></span>
-
-								<button
-									class="px-4 py-2 leading-5 text-white transition-colors duration-200 transform bg-gray-700 rounded-sm hover:bg-gray-600 focus:outline-hidden disabled:cursor-not-allowed disabled:opacity-50"
-									disabled={!url_valid || is_loading}
-									type="submit"
-								>
-									{#if is_loading}
-										<svg
-											class="h-4 w-4 animate-spin mx-auto"
-											viewBox="3 3 18 18"
-										>
-											<path
-												class="fill-black"
-												d="M12 5C8.13401 5 5 8.13401 5 12C5 15.866 8.13401 19 12 19C15.866 19 19 15.866 19 12C19 8.13401 15.866 5 12 5ZM3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12Z"
-											/>
-											<path
-												class="fill-blue-100"
-												d="M16.9497 7.05015C14.2161 4.31648 9.78392 4.31648 7.05025 7.05015C6.65973 7.44067 6.02656 7.44067 5.63604 7.05015C5.24551 6.65962 5.24551 6.02646 5.63604 5.63593C9.15076 2.12121 14.8492 2.12121 18.364 5.63593C18.7545 6.02646 18.7545 6.65962 18.364 7.05015C17.9734 7.44067 17.3403 7.44067 16.9497 7.05015Z"
-											/>
-										</svg>
-									{:else}
-										{$t('words.submit')}
-									{/if}
-								</button>
-							</div>
-						</div>
-					</form>
-					<form onsubmit={file_submit}>
-						<div class="w-full mt-4 border-l-2 border-gray-600 h-full flex flex-col">
-							<h2 class="text-center text-2xl">{$t('import_page.classquiz_quiz')}</h2>
-							<div class="dark:bg-gray-800 bg-white p-4 rounded-lg">
-								<div class="relative bg-inherit w-full">
-									<input
-										id="file"
-										bind:files={file_input}
-										name="file"
-										type="file"
-										accept=".cqa,.xlsx"
-										class="w-full peer bg-transparent h-10 rounded-lg py-1.5 text-gray-700 dark:text-white placeholder-transparent ring-2 px-2 ring-gray-500 focus:ring-sky-600 focus:outline-hidden focus:border-rose-600"
-										class:ring-red-700={!file_input}
-										class:ring-green-600={file_input}
-									/>
-									<p class="text-sm">{$t('import_page.upload_file_ending')}</p>
-								</div>
-								<p class="mt-2">
-									{$t('import_page.this_side_classquiz')}
-									<br />
-									{$t('import_page.this_side_classquiz_excel')}
-								</p>
-								<a
-									class="text-sm underline font-bold text-blue-500 dark:text-blue-400"
-									download
-									href="https://blog.web.garage.realux.mawoka.eu/classquiz/ClassQuizImportTemplate.xlsx"
-									>{$t('import_page.download_template_here')}</a
-								>
-							</div>
-
-							<div class="flex items-center justify-center mt-auto">
-								<span></span>
-
-								<button
-									class="px-4 py-2 leading-5 text-white transition-colors duration-200 transform bg-gray-700 rounded-sm hover:bg-gray-600 focus:outline-hidden disabled:cursor-not-allowed disabled:opacity-50"
-									disabled={!file_input || is_loading}
-									type="submit"
-								>
-									{#if is_loading}
-										<svg
-											class="h-4 w-4 animate-spin mx-auto"
-											viewBox="3 3 18 18"
-										>
-											<path
-												class="fill-black"
-												d="M12 5C8.13401 5 5 8.13401 5 12C5 15.866 8.13401 19 12 19C15.866 19 19 15.866 19 12C19 8.13401 15.866 5 12 5ZM3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12Z"
-											/>
-											<path
-												class="fill-blue-100"
-												d="M16.9497 7.05015C14.2161 4.31648 9.78392 4.31648 7.05025 7.05015C6.65973 7.44067 6.02656 7.44067 5.63604 7.05015C5.24551 6.65962 5.24551 6.02646 5.63604 5.63593C9.15076 2.12121 14.8492 2.12121 18.364 5.63593C18.7545 6.02646 18.7545 6.65962 18.364 7.05015C17.9734 7.44067 17.3403 7.44067 16.9497 7.05015Z"
-											/>
-										</svg>
-									{:else}
-										{$t('words.submit')}
-									{/if}
-								</button>
-							</div>
-						</div>
-					</form>
+	<div class="grid grid-cols-1 gap-5 lg:grid-cols-2">
+		<section class="qq-card flex flex-col p-5 sm:p-7">
+			<div class="mb-5 flex items-start gap-4">
+				<span
+					class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[var(--qq-green-soft)] text-lg font-bold text-[var(--qq-green)]"
+					aria-hidden="true">1</span
+				>
+				<div>
+					<h2 class="text-xl font-bold">{$t('import_page.a_kahoot_quiz')}</h2>
+					<p class="mt-1 text-sm text-[var(--qq-muted)]">
+						Paste the share link for a public Kahoot quiz.
+					</p>
 				</div>
 			</div>
-			<div
-				class="flex items-center justify-center py-4 text-center bg-gray-50 dark:bg-gray-700 mt-4"
-			>
-				<span class="text-sm text-gray-600 dark:text-gray-200"
-					>{$t('import_page.need_help')}</span
-				>
 
-				<a
-					href="/docs/import-from-kahoot"
-					class="mx-2 text-sm font-bold text-blue-500 dark:text-blue-400 hover:underline transition-all"
-					>{$t('import_page.visit_docs')}</a
+			<form class="mt-auto space-y-4" onsubmit={importKahoot}>
+				<div>
+					<label for="kahoot-url" class="mb-1 block text-sm font-semibold"
+						>{$t('words.url')}</label
+					>
+					<input
+						id="kahoot-url"
+						bind:value={urlInput}
+						type="url"
+						class="qq-input"
+						placeholder="https://create.kahoot.it/details/..."
+						autocomplete="url"
+						required
+						aria-describedby="kahoot-hint"
+					/>
+					<p id="kahoot-hint" class="mt-2 text-sm text-[var(--qq-muted)]">
+						{$t('import_page.url_should_look_like_this')}
+					</p>
+				</div>
+				<button
+					type="submit"
+					class="qq-button-primary w-full"
+					disabled={!urlValid || isLoading}
 				>
+					{isLoading ? 'Importing…' : $t('words.import')}
+				</button>
+			</form>
+		</section>
+
+		<section class="qq-card flex flex-col p-5 sm:p-7">
+			<div class="mb-5 flex items-start gap-4">
+				<span
+					class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[var(--qq-green-soft)] text-lg font-bold text-[var(--qq-green)]"
+					aria-hidden="true">2</span
+				>
+				<div>
+					<h2 class="text-xl font-bold">Import a file</h2>
+					<p class="mt-1 text-sm text-[var(--qq-muted)]">
+						Use a QuickQuiz export (.cqa) or a completed Excel template (.xlsx).
+					</p>
+				</div>
 			</div>
-		</div>
+
+			<form class="mt-auto space-y-4" onsubmit={importFile}>
+				<div>
+					<label for="quiz-file" class="mb-1 block text-sm font-semibold">Quiz file</label
+					>
+					<input
+						id="quiz-file"
+						bind:files={selectedFiles}
+						type="file"
+						accept=".cqa,.xlsx"
+						class="qq-input file:mr-3 file:rounded-lg file:border-0 file:bg-[var(--qq-green-soft)] file:px-3 file:py-2 file:font-semibold file:text-[var(--qq-ink)]"
+						required
+						aria-describedby="file-hint"
+					/>
+					<p id="file-hint" class="mt-2 text-sm text-[var(--qq-muted)]">
+						{#if selectedFiles?.[0]}
+							Selected: {selectedFiles[0].name}
+						{:else}
+							{$t('import_page.upload_file_ending')}
+						{/if}
+					</p>
+				</div>
+				<p class="text-sm text-[var(--qq-muted)]">
+					{$t('import_page.this_side_classquiz_excel')}
+				</p>
+				<button
+					type="submit"
+					class="qq-button-primary w-full"
+					disabled={!fileValid || isLoading}
+				>
+					{isLoading ? 'Importing…' : $t('words.import')}
+				</button>
+			</form>
+		</section>
 	</div>
-</div>
-<!--{/if}-->
+
+	<p class="mt-6 text-center text-sm text-[var(--qq-muted)]">
+		{$t('import_page.need_help')}
+		<a
+			href={resolve('/docs/import-from-kahoot')}
+			class="font-semibold text-[var(--qq-green)] underline"
+		>
+			{$t('import_page.visit_docs')}
+		</a>
+	</p>
+</main>

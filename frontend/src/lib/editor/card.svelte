@@ -98,48 +98,48 @@ SPDX-License-Identifier: MPL-2.0
      */
 </script>
 
-<div class="w-full max-h-full pb-10 px-10 h-full">
-	<div class="rounded-lg bg-white w-full h-full border-gray-500 dark:bg-gray-700 shadow-2xl">
-		<div class="h-12 bg-gray-300 rounded-t-lg dark:bg-gray-500">
-			<div class="flex align-middle p-4 gap-3">
-				<span
-					class="inline-block bg-gray-600 w-4 h-4 rounded-full hover:bg-red-400 transition"
-				></span>
-				<span
-					class="inline-block bg-gray-600 w-4 h-4 rounded-full hover:bg-yellow-400 transition"
-				></span>
-				<span
-					class="inline-block bg-gray-600 w-4 h-4 rounded-full hover:bg-green-400 transition"
-				></span>
-				<button
-					class="ml-auto"
-					type="button"
-					use:tippy={{ content: $t('editor.advanced_settings') }}
-					onclick={() => (advanced_options_open = true)}
-				>
-					<svg
-						class="text-white w-5 h-5"
-						aria-hidden="true"
-						fill="none"
-						stroke="white"
-						stroke-width="2"
-						viewBox="0 0 24 24"
-						xmlns="http://www.w3.org/2000/svg"
-					>
-						<path
-							d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
-							stroke-linecap="round"
-							stroke-linejoin="round"
-						/>
-						<path
-							d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-							stroke-linecap="round"
-							stroke-linejoin="round"
-						/>
-					</svg>
-				</button>
+<div class="mx-auto h-full w-full max-w-5xl px-3 pb-10 sm:px-6">
+	<div class="qq-card min-h-full overflow-hidden">
+		<header
+			class="flex items-center justify-between gap-4 border-b border-[var(--qq-border)] px-4 py-3 sm:px-6"
+		>
+			<div class="min-w-0">
+				<p class="text-xs font-bold uppercase tracking-wider text-[var(--qq-muted)]">
+					Question {selected_question + 1}
+				</p>
+				<h1 class="truncate text-lg font-bold text-[var(--qq-ink)]">
+					{type_to_name[String(data.questions[selected_question].type)] ?? 'Question'}
+				</h1>
 			</div>
-		</div>
+			<button
+				class="qq-button-secondary min-h-10 px-3 py-2"
+				type="button"
+				aria-label={$t('editor.advanced_settings')}
+				use:tippy={{ content: $t('editor.advanced_settings') }}
+				onclick={() => (advanced_options_open = true)}
+			>
+				<svg
+					class="h-5 w-5 text-[var(--qq-ink)]"
+					aria-hidden="true"
+					fill="none"
+					stroke="currentColor"
+					stroke-width="2"
+					viewBox="0 0 24 24"
+					xmlns="http://www.w3.org/2000/svg"
+				>
+					<path
+						d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+					/>
+					<path
+						d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+					/>
+				</svg>
+			</button>
+		</header>
 		{#if data.questions[selected_question].type === QuizQuestionType.SLIDE}
 			{#await loadEditorComponent(import('./slide.svelte'))}
 				<Spinner my_20={false} />
@@ -150,20 +150,23 @@ SPDX-License-Identifier: MPL-2.0
 			{/await}
 		{:else}
 			{@const type = data.questions[selected_question].type}
-			<div class="flex flex-col">
-				<div class="flex justify-center pt-10 w-full">
+			<div class="flex flex-col px-4 pb-8 sm:px-8">
+				<div class="mx-auto flex w-full max-w-3xl justify-center pt-8">
 					{#key unique}
 						{#await loadEditorComponent(import('$lib/inline-editor.svelte'))}
 							<Spinner my_20={false} />
 						{:then c}
 							<div
-								class="rounded-lg placeholder:italic placeholder:font-normal dark:bg-gray-500"
+								class="rounded-lg placeholder:italic placeholder:font-normal"
 								class:bg-yellow-500={!reach(
 									dataSchema,
 									'questions[].question'
 								).isValidSync(data.questions[selected_question].question)}
 							>
-								<c.default bind:text={data.questions[selected_question].question} />
+								<c.default
+									bind:text={data.questions[selected_question].question}
+									label={`Question ${selected_question + 1} text`}
+								/>
 							</div>
 						{:catch}
 							<LoadError />
@@ -171,11 +174,12 @@ SPDX-License-Identifier: MPL-2.0
 					{/key}
 				</div>
 				{#if data.questions[selected_question].image}
-					<div class="flex justify-center pt-10 w-full h-72">
+					<div class="flex h-72 w-full justify-center pt-8">
 						<div class="h-72 relative">
 							<button
 								class="rounded-full absolute -top-2 -right-2 opacity-70 hover:opacity-100 transition"
 								type="button"
+								aria-label="Remove question image"
 								onclick={() => {
 									data.questions[selected_question].image = null;
 								}}
@@ -213,8 +217,10 @@ SPDX-License-Identifier: MPL-2.0
 						<LoadError />
 					{/await}
 				{/if}
-				<div class="flex justify-center pt-10 w-full">
-					<div>
+				<div class="mt-6 flex justify-center">
+					<div
+						class="flex items-center gap-2 rounded-xl border border-[var(--qq-border)] px-3 py-2"
+					>
 						<svg
 							class="w-8 h-8 inline-block"
 							fill="none"
@@ -233,16 +239,13 @@ SPDX-License-Identifier: MPL-2.0
 							type="number"
 							max="999"
 							min="1"
-							class="w-20 bg-transparent rounded-lg text-lg border-2 border-gray-500 p-1 outline-hidden focus:shadow-2xl"
+							class="qq-input w-24 p-2 text-center"
 							bind:value={data.questions[selected_question].time}
 						/>
 						<p class="inline-block">s</p>
 					</div>
 				</div>
-				<div class="flex justify-center py-5">
-					<p>{type_to_name[String(data.questions[selected_question].type)]}</p>
-				</div>
-				<div class="flex justify-center w-full">
+				<div class="mt-4 flex w-full justify-center">
 					{#if type === QuizQuestionType.ABCD || type === QuizQuestionType.CHECK}
 						{#await loadEditorComponent(import('$lib/editor/ABCDEditorPart.svelte'))}
 							<Spinner my_20={false} />

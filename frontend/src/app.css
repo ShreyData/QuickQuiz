@@ -11,17 +11,215 @@ SPDX-License-Identifier: MPL-2.0
 @plugin "@tailwindcss/typography";
 @tailwind utilities;
 
+:root {
+	color-scheme: light;
+	--qq-primary: #4f46e5;
+	--qq-primary-strong: #4338ca;
+	--qq-primary-soft: #eef2ff;
+	--qq-accent: #ffb703;
+	--qq-accent-soft: #fff4d6;
+	--qq-success: #12b981;
+	--qq-danger: #ef4444;
+	--qq-info: #38bdf8;
+	--qq-ink: #111827;
+	--qq-muted: #5f6d7a;
+	--qq-green: #4f46e5;
+	--qq-green-hover: #4338ca;
+	--qq-green-soft: #eef2ff;
+	--qq-canvas: #f5f7ff;
+	--qq-surface: #ffffff;
+	--qq-surface-alt: #f0f4ff;
+	--qq-border: #dfe7ff;
+	--qq-focus: #ff8a65;
+}
+
+html.dark {
+	color-scheme: dark;
+	--qq-primary: #8b5cf6;
+	--qq-primary-strong: #7c3aed;
+	--qq-primary-soft: #231b3a;
+	--qq-accent: #fbbf24;
+	--qq-accent-soft: #3a2b10;
+	--qq-success: #34d399;
+	--qq-danger: #f87171;
+	--qq-info: #60a5fa;
+	--qq-ink: #edf2ff;
+	--qq-muted: #b3bfd7;
+	--qq-green: #8b5cf6;
+	--qq-green-hover: #a78bfa;
+	--qq-green-soft: #2b2242;
+	--qq-canvas: #0f172a;
+	--qq-surface: #151f32;
+	--qq-surface-alt: #18233c;
+	--qq-border: #37486d;
+	--qq-focus: #f59e0b;
+}
+
+html,
+body {
+	min-height: 100%;
+}
+
+body {
+	margin: 0;
+	background:
+		radial-gradient(circle at top, rgba(79, 70, 229, 0.12), transparent 28%),
+		var(--qq-canvas);
+	color: var(--qq-ink);
+	font-family:
+		'Inter',
+		'Plus Jakarta Sans',
+		ui-sans-serif,
+		system-ui,
+		-apple-system,
+		BlinkMacSystemFont,
+		'Segoe UI',
+		sans-serif;
+	line-height: 1.5;
+}
+
+button,
+input,
+select,
+textarea {
+	font: inherit;
+}
+
+a,
+button,
+input,
+select,
+textarea {
+	-webkit-tap-highlight-color: transparent;
+}
+
+::selection {
+	background: #b9d9c1;
+	color: #17211b;
+}
+
 .marck-script {
 	font-family: 'Marck Script';
 }
 
+.qq-display {
+	font-family: 'Marck Script', cursive;
+	letter-spacing: 0.015em;
+}
+
+.qq-container {
+	width: min(100% - 2rem, 76rem);
+	margin-inline: auto;
+}
+
+.qq-page-heading {
+	font-size: clamp(1.8rem, 3vw, 2.6rem);
+	font-weight: 750;
+	letter-spacing: -0.035em;
+	line-height: 1.12;
+}
+
+.qq-card {
+	border: 1px solid var(--qq-border);
+	border-radius: 1rem;
+	background: var(--qq-surface);
+	color: var(--qq-ink);
+	box-shadow: 0 8px 24px rgb(23 33 27 / 6%);
+}
+
+.qq-input {
+	width: 100%;
+	border: 1px solid var(--qq-border);
+	border-radius: 0.75rem;
+	background: var(--qq-surface);
+	color: var(--qq-ink);
+	padding: 0.7rem 0.9rem;
+	transition:
+		border-color 150ms ease,
+		box-shadow 150ms ease;
+}
+
+.qq-input::placeholder {
+	color: var(--qq-muted);
+	opacity: 0.8;
+}
+
+.qq-input:focus-visible,
+a:focus-visible,
+button:focus-visible,
+select:focus-visible {
+	outline: 3px solid var(--qq-focus);
+	outline-offset: 2px;
+}
+
+.qq-button-primary {
+	display: inline-flex;
+	min-height: 2.75rem;
+	align-items: center;
+	justify-content: center;
+	gap: 0.5rem;
+	border: 1px solid transparent;
+	border-radius: 0.75rem;
+	background: var(--qq-green);
+	padding: 0.65rem 1rem;
+	color: #fff;
+	font-weight: 650;
+	text-align: center;
+	text-decoration: none;
+	transition:
+		background-color 150ms ease,
+		transform 150ms ease;
+}
+
+.qq-button-primary:hover:not(:disabled) {
+	background: var(--qq-green-hover);
+}
+
+.qq-button-primary:active:not(:disabled) {
+	transform: translateY(1px);
+}
+
+.qq-button-primary:disabled {
+	cursor: not-allowed;
+	opacity: 0.55;
+}
+
+.qq-button-secondary {
+	display: inline-flex;
+	min-height: 2.75rem;
+	align-items: center;
+	justify-content: center;
+	gap: 0.5rem;
+	border: 1px solid var(--qq-border);
+	border-radius: 0.75rem;
+	background: var(--qq-surface);
+	padding: 0.65rem 1rem;
+	color: var(--qq-ink);
+	font-weight: 600;
+	text-align: center;
+	text-decoration: none;
+	transition:
+		background-color 150ms ease,
+		border-color 150ms ease;
+}
+
+.qq-button-secondary:hover:not(:disabled) {
+	border-color: var(--qq-green);
+	background: var(--qq-green-soft);
+}
+
+.qq-surface-muted {
+	background: color-mix(in srgb, var(--qq-surface) 76%, var(--qq-canvas));
+}
+
 .link-hover {
-	transition: all 0.3s;
+	transition: color 0.2s ease;
 }
 
 .link-hover:hover {
-	color: #4e6e58;
+	color: var(--qq-green);
 }
+
 @layer base {
 	button:not(:disabled),
 	[role='button']:not(:disabled) {
@@ -30,7 +228,7 @@ SPDX-License-Identifier: MPL-2.0
 }
 
 @utility normal-background {
-	@apply bg-gradient-to-r from-[#009444] via-[#39b54a] to-[#8dc63f] dark:bg-[#0f2702] dark:from-[#0f2702] dark:via-[#0f2702] dark:to-[#0f2702];
+	background: var(--qq-canvas);
 }
 
 @utility admin-button {
@@ -41,5 +239,17 @@ SPDX-License-Identifier: MPL-2.0
 	@apply px-4 py-2 leading-5 text-black dark:text-white transition-colors duration-200 transform bg-gray-50 dark:bg-gray-700 rounded-sm text-center hover:bg-gray-300 focus:outline-hidden disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-gray-600;
 }
 @utility btn-nav {
-	@apply text-lg font-medium px-3 text-gray-600 hover:text-green-600 py-1.5 transition-all duration-300;
+	@apply rounded-lg px-3 py-2 text-sm font-semibold transition-colors;
+	color: var(--qq-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		scroll-behavior: auto !important;
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.01ms !important;
+	}
 }

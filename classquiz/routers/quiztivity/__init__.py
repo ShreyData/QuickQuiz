@@ -5,7 +5,7 @@
 
 from uuid import UUID, uuid4
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 
 from classquiz.auth import get_current_user
 from datetime import datetime
@@ -52,8 +52,16 @@ async def delete_quiztivity(uuid: UUID):
 
 
 @router.get("/")
-async def get_all_quiztivities(user: User = Depends(get_current_user)) -> list[QuizTivity]:
-    quiztivities = await QuizTivity.objects.filter(user=user).order_by(QuizTivity.created_at.desc()).all()
+async def get_all_quiztivities(
+    user: User = Depends(get_current_user),
+    page: int = Query(default=1, ge=1),
+    page_size: int | None = Query(default=None, ge=1, le=100),
+) -> list[QuizTivity]:
+    query = QuizTivity.objects.filter(user=user).order_by(QuizTivity.created_at.desc())
+    if page_size is None:
+        quiztivities = await query.all()
+    else:
+        quiztivities = await query.paginate(page, page_size=page_size).all()
     return quiztivities
 
 

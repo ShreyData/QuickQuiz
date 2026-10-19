@@ -7,10 +7,12 @@ SPDX-License-Identifier: MPL-2.0
 <script lang="ts">
 	import Editor from '$lib/editor.svelte';
 	import { getLocalization } from '$lib/i18n';
-	import { navbarVisible} from '$lib/stores.svelte.ts';
+	import { navbarVisible } from '$lib/stores.svelte.ts';
 	import { QuizQuestionType } from '$lib/quiz_types';
+	import { resolve } from '$app/paths';
+	import { goto } from '$app/navigation';
 
-	navbarVisible.visible= false;
+	navbarVisible.visible = false;
 
 	const { t } = getLocalization();
 
@@ -40,48 +42,77 @@ SPDX-License-Identifier: MPL-2.0
 	let { data } = $props();
 	let { quiz_id } = $state(data);
 	let quiz_data: Data = $state();
+	let loadAttempt = $state(0);
 
-	const get_quiz = async (): Promise<void> => {
-		const response = await fetch(`/api/v1/quiz/get/${quiz_id}`);
-		if (response.status === 404) {
-			throw new Error('Quiz not found');
-		} else if (response.status === 200) {
-			let temp_data = await response.json();
-			for (let i = 0; i < temp_data.questions.length; i++) {
-				let question = temp_data.questions[i];
-				if (question.type === undefined) {
-					temp_data.questions[i].type = QuizQuestionType.ABCD;
-				} else {
-					temp_data.questions[i].type = QuizQuestionType[question.type];
-				}
-			}
-			quiz_data = temp_data;
-			return;
+	const get_quiz = async (_attempt: number): Promise<void> => {
+		const response = await fetch(`/api/v1/quiz/get/${encodeURIComponent(quiz_id)}`, {
+			signal: AbortSignal.timeout(15_000)
+		});
+		if (!response.ok) {
+			throw new Error(
+				response.status === 404
+					? 'Quiz not found.'
+					: `Could not load this quiz (HTTP ${response.status}).`
+			);
 		}
+
+		const temp_data = await response.json();
+		for (let i = 0; i < temp_data.questions.length; i++) {
+			const question = temp_data.questions[i];
+			if (question.type === undefined) {
+				temp_data.questions[i].type = QuizQuestionType.ABCD;
+			} else {
+				temp_data.questions[i].type = QuizQuestionType[question.type];
+			}
+		}
+		quiz_data = temp_data;
 	};
 </script>
 
 <svelte:head>
 	<title>QuickQuiz - Edit</title>
 </svelte:head>
-{#await get_quiz()}
-	<svg class="h-8 w-8 animate-spin mx-auto my-20" viewBox="3 3 18 18">
-		<path
-			class="fill-black"
-			d="M12 5C8.13401 5 5 8.13401 5 12C5 15.866 8.13401 19 12 19C15.866 19 19 15.866 19 12C19 8.13401 15.866 5 12 5ZM3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12Z"
-		/>
-		<path
-			class="fill-blue-100"
-			d="M16.9497 7.05015C14.2161 4.31648 9.78392 4.31648 7.05025 7.05015C6.65973 7.44067 6.02656 7.44067 5.63604 7.05015C5.24551 6.65962 5.24551 6.02646 5.63604 5.63593C9.15076 2.12121 14.8492 2.12121 18.364 5.63593C18.7545 6.02646 18.7545 6.65962 18.364 7.05015C17.9734 7.44067 17.3403 7.44067 16.9497 7.05015Z"
-		/>
-	</svg>
+{#await get_quiz(loadAttempt)}
+	<div
+		class="flex min-h-[60vh] flex-col items-center justify-center gap-4 bg-[var(--qq-canvas)] text-[var(--qq-ink)]"
+		role="status"
+	>
+		<svg class="h-8 w-8 animate-spin" viewBox="3 3 18 18" aria-hidden="true">
+			<path
+				class="fill-[var(--qq-ink)]"
+				d="M12 5C8.13401 5 5 8.13401 5 12C5 15.866 8.13401 19 12 19C15.866 19 19 15.866 19 12C19 8.13401 15.866 5 12 5ZM3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12Z"
+			/>
+			<path
+				class="fill-[var(--qq-green)]"
+				d="M16.9497 7.05015C14.2161 4.31648 9.78392 4.31648 7.05025 7.05015C6.65973 7.44067 6.02656 7.44067 5.63604 7.05015C5.24551 6.65962 5.24551 6.02646 5.63604 5.63593C9.15076 2.12121 14.8492 2.12121 18.364 5.63593C18.7545 6.02646 18.7545 6.65962 18.364 7.05015C17.9734 7.44067 17.3403 7.44067 16.9497 7.05015Z"
+			/>
+		</svg>
+		<p>Loading your quiz…</p>
+	</div>
 {:then _}
 	{#if quiz_data !== undefined}
-		<Editor bind:data={quiz_data} submit_button_text={$t('words.save')} bind:quiz_id />
+		<Editor bind:data={quiz_data} {quiz_id} />
 	{/if}
 {:catch err}
-	<div class="text-center">
-		<h1 class="text-5xl font-bold">{err.message}</h1>
+	<div
+		class="mx-auto flex min-h-[60vh] max-w-xl flex-col items-center justify-center gap-4 px-5 text-center text-[var(--qq-ink)]"
+	>
+		<h1 class="text-3xl font-bold">Could not open quiz</h1>
+		<p role="alert">
+			{err instanceof Error && err.name === 'TimeoutError'
+				? 'The request took too long. Check your connection and try again.'
+				: err instanceof Error
+					? err.message
+					: 'An unexpected error occurred while loading this quiz.'}
+		</p>
+		<button
+			type="button"
+			class="qq-button-primary"
+			onclick={() => {
+				quiz_data = undefined;
+				loadAttempt += 1;
+			}}>Try again</button
+		>
 	</div>
 {/await}
 
@@ -140,7 +171,7 @@ SPDX-License-Identifier: MPL-2.0
 				<button
 					type="button"
 					onclick={() => {
-						window.location.href = '/dashboard';
+						void goto(resolve('/dashboard'));
 					}}
 					class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-xm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
 					>{$t('words.close')}

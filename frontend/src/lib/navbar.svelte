@@ -6,330 +6,267 @@ SPDX-License-Identifier: MPL-2.0
 
 <script lang="ts">
 	import '@fontsource/marck-script/index.css';
-	import { getLocalization } from '$lib/i18n';
-	import { signedIn, pathname } from '$lib/stores';
-	import { createTippy } from 'svelte-tippy';
-	import { browser } from '$app/environment';
+	import { resolve } from '$app/paths';
+	import { page } from '$app/state';
 	import { beforeNavigate } from '$app/navigation';
-	import { draw, slide } from 'svelte/transition';
+	import { onMount } from 'svelte';
+	import { getLocalization } from '$lib/i18n';
+	import { signedIn } from '$lib/stores';
 	import { registration_disabled } from './config';
-
-	const tippy = createTippy({
-		arrow: true,
-		animation: 'perspective-subtle',
-		placement: 'bottom'
-	});
 
 	const { t } = getLocalization();
 
-	let menuIsClosed = $state(true);
-	const toggleMenu = () => {
-		menuIsClosed = !menuIsClosed;
-	};
-
-	beforeNavigate(() => {
-		menuIsClosed = true; // Closes menu to let the user see the page beneath
-	});
-
+	let menuOpen = $state(false);
 	let darkMode = $state(false);
-	if (browser) {
+
+	onMount(() => {
 		darkMode =
 			localStorage.theme === 'dark' ||
 			(!('theme' in localStorage) &&
 				window.matchMedia('(prefers-color-scheme: dark)').matches);
-	}
+	});
 
-	const switchDarkMode = () => {
-		!darkMode ? localStorage.setItem('theme', 'dark') : localStorage.setItem('theme', 'light');
-		window.location.reload();
+	beforeNavigate(() => {
+		menuOpen = false;
+	});
+
+	const toggleTheme = () => {
+		darkMode = !darkMode;
+		localStorage.setItem('theme', darkMode ? 'dark' : 'light');
+		document.documentElement.classList.toggle('dark', darkMode);
 	};
+
+	const isActive = (href: string) => page.url.pathname === href;
 </script>
 
-<nav class="w-screen px-4 lg:px-10 py-2 fixed backdrop-blur-2xl bg-white/70 shadow-md z-30 top-0">
-	<!-- Desktop navbar -->
-	<div class="hidden lg:flex lg:items-center lg:flex-row lg:justify-between">
-		<div class="lg:flex lg:items-center lg:flex-row gap-1">
+<svelte:head>
+	<meta name="theme-color" content={darkMode ? '#24362b' : '#edf3eb'} />
+</svelte:head>
+
+<header
+	class="fixed inset-x-0 top-0 z-40 border-b backdrop-blur-xl"
+	style="border-color: var(--qq-border); background: color-mix(in srgb, var(--qq-surface) 90%, transparent);"
+>
+	<nav class="qq-container flex min-h-16 items-center justify-between gap-3" aria-label="Main">
+		<a
+			href={resolve('/')}
+			class="flex shrink-0 items-center gap-2 text-[var(--qq-ink)] no-underline"
+		>
+			<img src="/quickquiz-mark.svg" alt="" class="h-9 w-9" />
+			<span class="text-xl font-extrabold tracking-tight sm:text-2xl">QuickQuiz</span>
+		</a>
+
+		<div class="hidden items-center gap-1 md:flex">
 			<a
-				href="/"
-				class="flex items-center gap-2 font-black tracking-tight text-xl lg:text-2xl text-black link-hover px-3 lg:px-5"
-				><img src="/quickquiz-mark.svg" alt="" class="h-8 w-8" />QuickQuiz</a
+				href={resolve('/explore')}
+				aria-current={isActive('/explore') ? 'page' : undefined}
+				class="btn-nav hover:bg-[var(--qq-green-soft)] hover:text-[var(--qq-ink)]"
+				class:bg-[var(--qq-green-soft)]={isActive('/explore')}
+				class:text-[var(--qq-ink)]={isActive('/explore')}
 			>
-			<a class="btn-nav border-2 rounded-sm" href="/play">{$t('words.play')}</a>
-			<a class="btn-nav" href="/explore">{$t('words.explore')}</a>
-			<a class="btn-nav" href="/search">{$t('words.search')}</a>
+				{$t('words.explore')}
+			</a>
+			<a
+				href={resolve('/search')}
+				aria-current={isActive('/search') ? 'page' : undefined}
+				class="btn-nav hover:bg-[var(--qq-green-soft)] hover:text-[var(--qq-ink)]"
+				class:bg-[var(--qq-green-soft)]={isActive('/search')}
+				class:text-[var(--qq-ink)]={isActive('/search')}
+			>
+				{$t('words.search')}
+			</a>
 			{#if $signedIn}
-				<a class="btn-nav" href="/dashboard">{$t('words.dashboard')}</a>
-			{:else}
-				<a class="btn-nav" href="/docs">{$t('words.docs')}</a>
 				<a
-					target="_blank"
-					class="btn-nav flex items-center gap-1"
-					href="https://github.com/ShreyData/QuickQuiz"
-					rel="noopener noreferrer"
-					>GitHub
-					<svg
-						xmlns="http://www.w3.org/2000/svg"
-						width="17"
-						height="17"
-						viewBox="0 0 24 24"
-						fill="none"
-						stroke="currentColor"
-						stroke-width="2"
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						class="lucide lucide-external-link"
-						><path
-							d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"
-						/><polyline points="15 3 21 3 21 9" /><line
-							x1="10"
-							x2="21"
-							y1="14"
-							y2="3"
-						/></svg
-					>
+					href={resolve('/dashboard')}
+					aria-current={isActive('/dashboard') ? 'page' : undefined}
+					class="btn-nav hover:bg-[var(--qq-green-soft)] hover:text-[var(--qq-ink)]"
+					class:bg-[var(--qq-green-soft)]={isActive('/dashboard')}
+					class:text-[var(--qq-ink)]={isActive('/dashboard')}
+				>
+					{$t('words.dashboard')}
+				</a>
+			{:else}
+				<a
+					href={resolve('/docs')}
+					class="btn-nav hover:bg-[var(--qq-green-soft)] hover:text-[var(--qq-ink)]"
+				>
+					{$t('words.docs')}
 				</a>
 			{/if}
 		</div>
-		<div class="lg:flex lg:items-center lg:flex-row gap-1">
+
+		<div class="hidden items-center gap-2 md:flex">
+			<a href={resolve('/play')} class="qq-button-secondary">{$t('words.play')}</a>
 			{#if $signedIn}
-				<a class="btn-nav" href="/api/v1/users/logout">{$t('words.logout')}</a>
+				<form action="/api/v1/users/logout" method="get">
+					<button type="submit" class="qq-button-secondary">{$t('words.logout')}</button>
+				</form>
 			{:else}
 				{#if registration_disabled}
-					<a class="btn-nav" href="/account/register">{$t('words.register')}</a>
+					<a href={resolve('/account/register')} class="qq-button-secondary"
+						>{$t('words.register')}</a
+					>
 				{/if}
-
-				<a class="btn-nav" href="/account/login?returnTo={$pathname}">{$t('words.login')}</a
+				<a href={resolve('/account/login')} class="qq-button-primary">{$t('words.login')}</a
 				>
 			{/if}
-
-			<div class="fit-content flex items-center justify-center gap-2">
-				<div class="lg:flex items-center justify-center">
-					{#if darkMode}
-						<button
-							onclick={() => {
-								switchDarkMode();
-							}}
-							use:tippy={{ content: 'Switch light mode on' }}
-							aria-label="Activate light mode"
-						>
-							<!-- Heroicons: sun -->
-							<svg
-								class="w-6 h-6 text-black"
-								fill="none"
-								aria-label="Sun-Icon"
-								stroke="currentColor"
-								viewBox="0 0 24 24"
-								xmlns="http://www.w3.org/2000/svg"
-							>
-								<path
-									stroke-linecap="round"
-									stroke-linejoin="round"
-									stroke-width="2"
-									stroke="currentColor"
-									d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
-								/>
-							</svg>
-						</button>
-					{:else}
-						<button
-							onclick={() => {
-								switchDarkMode();
-							}}
-							aria-label="Activate darkmode"
-							use:tippy={{ content: 'Switch dark mode on' }}
-						>
-							<!-- Heroicons: moon -->
-							<svg
-								aria-label="Moon-Icon"
-								class="w-6 h-6"
-								fill="none"
-								stroke="currentColor"
-								viewBox="0 0 24 24"
-								xmlns="http://www.w3.org/2000/svg"
-							>
-								<path
-									stroke-linecap="round"
-									stroke-linejoin="round"
-									stroke-width="2"
-									d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
-								/>
-							</svg>
-						</button>
-					{/if}
-				</div>
-			</div>
-		</div>
-	</div>
-
-	<!-- Mobile navbar -->
-	<div class="lg:hidden">
-		<!-- Navbar header -->
-		<div class="flex items-center justify-between">
-			<a
-				href="/"
-				class="flex items-center gap-2 font-black tracking-tight text-xl lg:text-2xl text-black link-hover px-3 lg:px-5"
-				><img src="/quickquiz-mark.svg" alt="" class="h-8 w-8" />QuickQuiz</a
+			<button
+				type="button"
+				class="flex h-11 w-11 items-center justify-center rounded-xl text-[var(--qq-ink)] transition hover:bg-[var(--qq-green-soft)]"
+				onclick={toggleTheme}
+				aria-label={darkMode ? 'Activate light mode' : 'Activate dark mode'}
+				title={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
 			>
-			<a class="btn-nav flex" href="/play">{$t('words.play')}</a>
-
-			<!-- Dark/Light mode toggle + Open/Close menu -->
-			<div class="flex items-center">
 				{#if darkMode}
-					<!-- Sun icon -->
-					<button
-						class="px-3"
-						onclick={() => {
-							switchDarkMode();
-						}}
-						use:tippy={{ content: 'Switch light mode on' }}
-						aria-label="Activate light mode"
+					<svg
+						aria-hidden="true"
+						viewBox="0 0 24 24"
+						class="h-5 w-5"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="1.8"
 					>
-						<!-- Heroicons: sun -->
-						<svg
-							class="w-6 h-6 text-black"
-							fill="none"
-							aria-label="Sun-Icon"
-							stroke="currentColor"
-							viewBox="0 0 24 24"
-							xmlns="http://www.w3.org/2000/svg"
-						>
-							<path
-								stroke-linecap="round"
-								stroke-linejoin="round"
-								stroke-width="2"
-								stroke="currentColor"
-								d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
-							/>
-						</svg>
-					</button>
+						<circle cx="12" cy="12" r="4" />
+						<path
+							stroke-linecap="round"
+							d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"
+						/>
+					</svg>
 				{:else}
-					<!-- Moon icon -->
-					<button
-						class="px-3"
-						onclick={() => {
-							switchDarkMode();
-						}}
-						aria-label="Activate darkmode"
-						use:tippy={{ content: 'Switch dark mode on' }}
+					<svg
+						aria-hidden="true"
+						viewBox="0 0 24 24"
+						class="h-5 w-5"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="1.8"
 					>
-						<!-- Heroicons: moon -->
-						<svg
-							aria-label="Moon-Icon"
-							class="w-6 h-6"
-							fill="none"
-							stroke="currentColor"
-							viewBox="0 0 24 24"
-							xmlns="http://www.w3.org/2000/svg"
-						>
-							<path
-								stroke-linecap="round"
-								stroke-linejoin="round"
-								stroke-width="2"
-								d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
-							/>
-						</svg>
-					</button>
-				{/if}
-
-				{#if menuIsClosed}
-					<button
-						class="px-3"
-						id="open-menu"
-						onclick={toggleMenu}
-						aria-label="Open navbar"
-					>
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							width="24"
-							height="24"
-							viewBox="0 0 24 24"
-							fill="none"
-							stroke="#000000"
-							stroke-width="2"
+						<path
 							stroke-linecap="round"
 							stroke-linejoin="round"
-						>
-							<path d="M3 6h18M3 12h18M3 18h18" />
-						</svg>
-					</button>
-				{:else}
-					<button
-						class="px-3"
-						id="close-menu"
-						onclick={toggleMenu}
-						aria-label="Close navbar"
-					>
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							width="24"
-							height="24"
-							viewBox="0 0 24 24"
-							fill="none"
-							stroke="#000000"
-							stroke-width="2"
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							><path in:draw|global={{ duration: 300 }} d="M18 6 6 18" /><path
-								in:draw|global={{ duration: 300 }}
-								d="m6 6 12 12"
-							/></svg
-						>
-					</button>
+							d="M20.4 15.4A8.5 8.5 0 0 1 8.6 3.6 8.5 8.5 0 1 0 20.4 15.4Z"
+						/>
+					</svg>
 				{/if}
-			</div>
+			</button>
 		</div>
 
-		<!-- Navbar content -->
-		{#if !menuIsClosed}
-			<div class="flex flex-col" transition:slide|global={{ duration: 400 }}>
-				<a class="btn-nav" href="/explore">{$t('words.explore')}</a>
-				<a class="btn-nav" href="/search">{$t('words.search')}</a>
-				{#if $signedIn}
-					<a class="btn-nav" href="/dashboard">{$t('words.dashboard')}</a>
+		<div class="flex items-center gap-1 md:hidden">
+			<a href={resolve('/play')} class="qq-button-primary px-3">{$t('words.play')}</a>
+			<button
+				type="button"
+				class="flex h-11 w-11 items-center justify-center rounded-xl text-[var(--qq-ink)] hover:bg-[var(--qq-green-soft)]"
+				onclick={toggleTheme}
+				aria-label={darkMode ? 'Activate light mode' : 'Activate dark mode'}
+			>
+				{#if darkMode}
+					<span aria-hidden="true">☀</span>
 				{:else}
-					<a class="btn-nav" href="/docs">{$t('words.docs')}</a>
+					<span aria-hidden="true">☾</span>
+				{/if}
+			</button>
+			<button
+				type="button"
+				class="flex h-11 w-11 items-center justify-center rounded-xl text-[var(--qq-ink)] hover:bg-[var(--qq-green-soft)]"
+				aria-expanded={menuOpen}
+				aria-controls="mobile-navigation"
+				aria-label={menuOpen ? 'Close navigation menu' : 'Open navigation menu'}
+				onclick={() => (menuOpen = !menuOpen)}
+			>
+				{#if menuOpen}
+					<svg
+						aria-hidden="true"
+						viewBox="0 0 24 24"
+						class="h-6 w-6"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2"
+					>
+						<path stroke-linecap="round" d="m6 6 12 12M18 6 6 18" />
+					</svg>
+				{:else}
+					<svg
+						aria-hidden="true"
+						viewBox="0 0 24 24"
+						class="h-6 w-6"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2"
+					>
+						<path stroke-linecap="round" d="M4 7h16M4 12h16M4 17h16" />
+					</svg>
+				{/if}
+			</button>
+		</div>
+	</nav>
+
+	{#if menuOpen}
+		<div
+			id="mobile-navigation"
+			class="qq-container flex flex-col gap-1 border-t py-3 md:hidden"
+			style="border-color: var(--qq-border);"
+		>
+			<a
+				href={resolve('/explore')}
+				aria-current={isActive('/explore') ? 'page' : undefined}
+				class="rounded-lg px-3 py-3 font-semibold text-[var(--qq-ink)] hover:bg-[var(--qq-green-soft)]"
+				>{$t('words.explore')}</a
+			>
+			<a
+				href={resolve('/search')}
+				aria-current={isActive('/search') ? 'page' : undefined}
+				class="rounded-lg px-3 py-3 font-semibold text-[var(--qq-ink)] hover:bg-[var(--qq-green-soft)]"
+				>{$t('words.search')}</a
+			>
+			{#if $signedIn}
+				<a
+					href={resolve('/dashboard')}
+					class="rounded-lg px-3 py-3 font-semibold text-[var(--qq-ink)] hover:bg-[var(--qq-green-soft)]"
+				>
+					{$t('words.dashboard')}
+				</a>
+				<a
+					href={resolve('/results')}
+					class="rounded-lg px-3 py-3 font-semibold text-[var(--qq-ink)] hover:bg-[var(--qq-green-soft)]"
+				>
+					{$t('words.results')}
+				</a>
+				<a
+					href={resolve('/account/settings')}
+					class="rounded-lg px-3 py-3 font-semibold text-[var(--qq-ink)] hover:bg-[var(--qq-green-soft)]"
+				>
+					{$t('words.settings')}
+				</a>
+				<form action="/api/v1/users/logout" method="get">
+					<button
+						type="submit"
+						class="w-full rounded-lg px-3 py-3 text-left font-semibold text-[var(--qq-ink)] hover:bg-[var(--qq-green-soft)]"
+					>
+						{$t('words.logout')}
+					</button>
+				</form>
+			{:else}
+				<a
+					href={resolve('/docs')}
+					class="rounded-lg px-3 py-3 font-semibold text-[var(--qq-ink)] hover:bg-[var(--qq-green-soft)]"
+				>
+					{$t('words.docs')}
+				</a>
+				<a
+					href={resolve('/account/login')}
+					class="rounded-lg px-3 py-3 font-semibold text-[var(--qq-ink)] hover:bg-[var(--qq-green-soft)]"
+				>
+					{$t('words.login')}
+				</a>
+				{#if registration_disabled}
 					<a
-						target="_blank"
-						class="btn-nav flex items-center gap-1"
-						href="https://github.com/ShreyData/QuickQuiz"
-						rel="noopener noreferrer"
-						>GitHub
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							width="17"
-							height="17"
-							viewBox="0 0 24 24"
-							fill="none"
-							stroke="currentColor"
-							stroke-width="2"
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							class="lucide lucide-external-link"
-							><path
-								d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"
-							/><polyline points="15 3 21 3 21 9" /><line
-								x1="10"
-								x2="21"
-								y1="14"
-								y2="3"
-							/></svg
-						>
+						href={resolve('/account/register')}
+						class="rounded-lg px-3 py-3 font-semibold text-[var(--qq-ink)] hover:bg-[var(--qq-green-soft)]"
+					>
+						{$t('words.register')}
 					</a>
 				{/if}
-
-				<hr class="my-1 border" />
-				{#if $signedIn}
-					<a class="btn-nav" href="/api/v1/users/logout">{$t('words.logout')}</a>
-				{:else}
-					{#if registration_disabled}
-						<a class="btn-nav" href="/account/register">{$t('words.register')}</a>
-					{/if}
-
-					<a class="btn-nav" href="/account/login?returnTo={$pathname}"
-						>{$t('words.login')}</a
-					>
-				{/if}
-			</div>
-		{/if}
-	</div>
-</nav>
+			{/if}
+		</div>
+	{/if}
+</header>

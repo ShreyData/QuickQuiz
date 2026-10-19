@@ -6,13 +6,15 @@ SPDX-License-Identifier: MPL-2.0
 
 <script lang="ts">
 	import { dataSchema } from '$lib/yupSchemas';
-	import type { EditorData, Question } from './quiz_types';
+	import type { EditorData } from './quiz_types';
 	import Sidebar from '$lib/editor/sidebar.svelte';
 	import SettingsCard from '$lib/editor/settings-card.svelte';
 	import QuizCard from '$lib/editor/card.svelte';
 	import Spinner from './Spinner.svelte';
 	import { getLocalization } from '$lib/i18n';
 	import { onMount } from 'svelte';
+	import { resolve } from '$app/paths';
+	import { goto } from '$app/navigation';
 
 	const { t } = getLocalization();
 
@@ -117,7 +119,7 @@ SPDX-License-Identifier: MPL-2.0
 				throw new Error($t('editor.save_http_failed', { status: response.status }));
 			}
 			confirm_to_leave = false;
-			window.location.assign('/dashboard');
+			await goto(resolve('/dashboard'));
 		} catch (error) {
 			saveError =
 				error instanceof Error && error.name === 'TimeoutError'
@@ -133,47 +135,57 @@ SPDX-License-Identifier: MPL-2.0
 
 <svelte:window onbeforeunload={confirmUnload} />
 {#if editorInitializing}
-	<div class="flex min-h-screen flex-col items-center justify-center gap-3" role="status">
+	<div
+		class="flex min-h-screen flex-col items-center justify-center gap-3 bg-[var(--qq-canvas)] text-[var(--qq-ink)]"
+		role="status"
+	>
 		<Spinner />
 		<p>{$t('editor.preparing')}</p>
 	</div>
 {:else if initializationError}
 	<div
-		class="mx-auto flex min-h-screen max-w-xl flex-col items-center justify-center gap-4 px-6 text-center"
+		class="mx-auto flex min-h-screen max-w-xl flex-col items-center justify-center gap-4 bg-[var(--qq-canvas)] px-6 text-center text-[var(--qq-ink)]"
 	>
 		<h1 class="text-3xl font-bold">{$t('editor.open_failed')}</h1>
 		<p role="alert">{initializationError}</p>
-		<button
-			class="rounded-lg bg-[#4e6e58] px-5 py-3 font-semibold text-white hover:bg-[#3f5d49]"
-			type="button"
-			onclick={() => void getEditID()}>{$t('editor.retry')}</button
+		<button class="qq-button-primary" type="button" onclick={() => void getEditID()}
+			>{$t('editor.retry')}</button
 		>
 	</div>
 {:else}
 	<form onsubmit={saveQuiz}>
 		<div
-			class="grid h-dvh w-full grid-cols-[minmax(14rem,18rem)_minmax(0,1fr)] overflow-hidden"
+			class="grid h-dvh w-full grid-cols-1 grid-rows-[minmax(12rem,35vh)_minmax(0,1fr)] overflow-hidden bg-[var(--qq-canvas)] md:grid-cols-[minmax(14rem,18rem)_minmax(0,1fr)] md:grid-rows-1"
 		>
-			<div class="min-w-0 overflow-hidden">
+			<div
+				class="min-h-0 min-w-0 overflow-hidden border-b border-[var(--qq-border)] bg-[var(--qq-surface)] md:border-b-0 md:border-r"
+			>
 				<Sidebar bind:data bind:selected_question />
 			</div>
 			<div class="flex min-w-0 flex-col overflow-hidden">
-				<div class="flex h-12 w-full shrink-0 items-center justify-center bg-white">
-					{#if schemaInvalid}
-						<p class="w-full px-3 text-center font-semibold text-red-600">
-							{yupErrorMessage}
+				<header
+					class="flex min-h-[3.75rem] w-full shrink-0 flex-wrap items-center gap-3 border-b border-[var(--qq-border)] bg-[var(--qq-surface)] px-3 py-2 sm:px-5"
+				>
+					<a href={resolve('/dashboard')} class="qq-button-secondary min-h-10 px-3 py-2">
+						<span aria-hidden="true">←</span>
+						{$t('words.dashboard')}
+					</a>
+					<div class="min-w-0 flex-1">
+						<p class="truncate font-semibold text-[var(--qq-ink)]">
+							{data.title || $t('editor.no_title')}
 						</p>
-					{:else if saveError}
-						<p class="w-full px-3 text-center font-semibold text-red-600" role="alert">
-							{saveError}
-						</p>
-					{:else}
-						<p class="min-w-0 flex-1 truncate px-4 text-gray-900">
-							{@html data.title || 'Untitled quiz'}
-						</p>
-					{/if}
+						{#if schemaInvalid}
+							<p class="truncate text-sm font-medium text-red-700" role="status">
+								{yupErrorMessage}
+							</p>
+						{:else if saveError}
+							<p class="truncate text-sm font-medium text-red-700" role="alert">
+								{saveError}
+							</p>
+						{/if}
+					</div>
 					<button
-						class="ml-auto h-full whitespace-nowrap bg-[#B07156] px-4 text-white transition hover:bg-[#966047] disabled:cursor-not-allowed disabled:opacity-60"
+						class="qq-button-primary whitespace-nowrap"
 						disabled={schemaInvalid || saving}
 					>
 						<span>{saving ? $t('editor.saving') : $t('words.save')}</span>
@@ -192,8 +204,8 @@ SPDX-License-Identifier: MPL-2.0
 							/>
 						</svg>
 					</button>
-				</div>
-				<div class="min-h-0 w-full flex-1 overflow-y-auto">
+				</header>
+				<div class="min-h-0 w-full flex-1 overflow-y-auto py-3 sm:py-5">
 					{#if selected_question === -1}
 						<SettingsCard bind:data bind:edit_id />
 					{:else}

@@ -547,6 +547,37 @@ class TestQuizivity:
         assert type(data) is list
         assert data[0]["id"] == ValueStorage.quiztivity_id
 
+        second_quiztivity = test_client.post(
+            "/api/v1/quiztivity/create",
+            cookies=ValueStorage.cookies,
+            json={**example_quiztivity, "title": "Pagination test"},
+        )
+        assert second_quiztivity.status_code == 200
+        second_id = second_quiztivity.json()["id"]
+
+        first_page = test_client.get(
+            "/api/v1/quiztivity/?page=1&page_size=1", cookies=ValueStorage.cookies
+        )
+        second_page = test_client.get(
+            "/api/v1/quiztivity/?page=2&page_size=1", cookies=ValueStorage.cookies
+        )
+        assert first_page.status_code == second_page.status_code == 200
+        first_page_ids = {item["id"] for item in first_page.json()}
+        second_page_ids = {item["id"] for item in second_page.json()}
+        assert len(first_page_ids) == len(second_page_ids) == 1
+        assert first_page_ids.isdisjoint(second_page_ids)
+
+        unbounded = test_client.get("/api/v1/quiztivity/", cookies=ValueStorage.cookies)
+        assert {ValueStorage.quiztivity_id, second_id}.issubset(
+            {item["id"] for item in unbounded.json()}
+        )
+        assert test_client.get(
+            "/api/v1/quiztivity/?page_size=101", cookies=ValueStorage.cookies
+        ).status_code == 422
+        assert test_client.delete(
+            f"/api/v1/quiztivity/{second_id}", cookies=ValueStorage.cookies
+        ).status_code == 200
+
     @pytest.mark.asyncio
     async def test_create_share(self, test_client: TestClient):  # noqa : F811
         resp = test_client.post(

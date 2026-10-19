@@ -12,14 +12,12 @@ SPDX-License-Identifier: MPL-2.0
 	import { createTippy } from 'svelte-tippy';
 	import { getLocalization } from '$lib/i18n';
 	import AddNewQuestionPopup from '$lib/editor/AddNewQuestionPopup.svelte';
-	import BrownButton from '$lib/components/buttons/brown.svelte';
-	import { fade } from 'svelte/transition';
 
 	const { t } = getLocalization();
 
 	interface Props {
 		data: EditorData;
-		selected_question?: any;
+		selected_question?: number;
 	}
 
 	let { data = $bindable(), selected_question = $bindable(-1) }: Props = $props();
@@ -31,8 +29,10 @@ SPDX-License-Identifier: MPL-2.0
 		animation: 'perspective-subtle',
 		placement: 'right'
 	});
-	let arr_of_cards = $state(Array(data.questions.length));
-	let propertyCard = $state();
+	let arr_of_cards: (HTMLDivElement | undefined)[] = $state(
+		Array(data.questions.length).fill(undefined)
+	);
+	let propertyCard: HTMLDivElement | undefined = $state();
 	let add_new_question_popup_open = $state(false);
 
 	const empy_slide: Question = {
@@ -57,11 +57,11 @@ SPDX-License-Identifier: MPL-2.0
 		}
 		selected_question = index;
 		if (index === -1) {
-			propertyCard.scrollIntoView({
+			propertyCard?.scrollIntoView({
 				behavior: 'smooth'
 			});
 		} else {
-			arr_of_cards[index].scrollIntoView({
+			arr_of_cards[index]?.scrollIntoView({
 				behavior: 'smooth'
 			});
 		}
@@ -73,35 +73,53 @@ SPDX-License-Identifier: MPL-2.0
         });*/
 </script>
 
-<div class="relative h-full min-h-0">
-	<div class="h-10 flex justify-center w-full p-1 absolute z-20">
-		<div>
-			<BrownButton onclick={() => (reorder_mode = !reorder_mode)}
-				>{#if reorder_mode}{$t('editor.disable_reorder')}{:else}{$t(
-						'editor.enable_reorder'
-					)}{/if}</BrownButton
-			>
+<div class="flex h-full min-h-0 flex-col">
+	<div
+		class="flex shrink-0 items-center justify-between gap-2 border-b border-[var(--qq-border)] px-3 py-2.5 sm:px-4"
+	>
+		<div class="min-w-0">
+			<h2 class="truncate text-sm font-bold text-[var(--qq-ink)]">Quiz outline</h2>
+			<p class="text-xs text-[var(--qq-muted)]">
+				{data.questions.length}
+				{data.questions.length === 1 ? 'question' : 'questions'}
+			</p>
 		</div>
-	</div>
-	<div class="h-full overflow-y-auto overscroll-contain border-r-2 px-4 pt-12 sm:px-6">
-		<div
-			bind:this={propertyCard}
-			class="bg-white shadow-smrounded-lg h-40 p-2 mb-6 hover:cursor-pointer drop-shadow-2xl border border-gray-500 dark:bg-gray-600 transition"
-			class:bg-green-300={selected_question === -1}
-			class:dark:bg-green-500={selected_question === -1}
-			onclick={() => setSelectedQuestion(-1)}
+		<button
+			type="button"
+			class="qq-button-secondary min-h-9 px-2.5 py-1.5 text-xs"
+			aria-pressed={reorder_mode}
+			onclick={() => (reorder_mode = !reorder_mode)}
 		>
+			{#if reorder_mode}Done{:else}Reorder{/if}
+		</button>
+	</div>
+	<div
+		class="flex min-h-0 flex-1 gap-2 overflow-x-auto overscroll-contain px-3 py-3 md:flex-col md:overflow-x-hidden md:overflow-y-auto md:px-4"
+	>
+		<article
+			bind:this={propertyCard}
+			class="qq-card w-[min(78vw,18rem)] shrink-0 p-3 transition md:w-auto"
+			style:background-color={selected_question === -1 ? 'var(--qq-green-soft)' : undefined}
+			style:border-color={selected_question === -1 ? 'var(--qq-green)' : undefined}
+		>
+			<button
+				type="button"
+				class="mb-2 flex w-full items-center justify-between text-left text-[0.7rem] font-bold uppercase tracking-wider text-[var(--qq-muted)]"
+				aria-current={selected_question === -1 ? 'page' : undefined}
+				onclick={() => setSelectedQuestion(-1)}
+			>
+				<span>Quiz details</span>
+				<span class="text-xs font-semibold normal-case tracking-normal">Edit</span>
+			</button>
 			<div
 				use:tippy={{ content: data.title === '' ? "It's empty!" : data.title }}
-				class="m-1 border border-gray-500 rounded-lg p-0.5 transition"
+				class="rounded-lg border border-[var(--qq-border)] p-1 transition"
 				class:border-red-600={!reach(dataSchema, 'title').isValidSync(data.title)}
 				class:border-solid={!reach(dataSchema, 'title').isValidSync(data.title)}
 				class:border-2={!reach(dataSchema, 'title').isValidSync(data.title)}
 			>
 				<p
-					type="text"
-					class="whitespace-nowrap truncate text-center w-full bg-transparent rounded-sm dark:text-white"
-					class:dark:text-black={selected_question === -1}
+					class="w-full truncate rounded-sm bg-transparent text-left font-semibold text-[var(--qq-ink)]"
 				>
 					{#if data.title}
 						{@html data.title}
@@ -112,7 +130,7 @@ SPDX-License-Identifier: MPL-2.0
 			</div>
 			<div
 				use:tippy={{ content: data.description === '' ? "It's empty!" : data.description }}
-				class="m-1 border border-gray-500 rounded-lg p-0.5 transition"
+				class="rounded-lg border border-[var(--qq-border)] p-1 transition"
 				class:border-red-600={!reach(dataSchema, 'description').isValidSync(
 					data.description
 				)}
@@ -121,20 +139,16 @@ SPDX-License-Identifier: MPL-2.0
 			>
 				<textarea
 					bind:value={data.description}
-					class="bg-transparent resize-none w-full rounded-sm text-sm dark:text-white"
-					class:dark:text-black={selected_question === -1}
+					class="w-full resize-none rounded-sm bg-transparent text-xs text-[var(--qq-ink)]"
 				></textarea>
 			</div>
-			<div
-				class="w-full flex justify-center dark:text-white"
-				class:dark:text-black={selected_question === -1}
-			>
+			<div class="mt-1 flex w-full justify-start text-[var(--qq-muted)]">
 				<button
 					type="button"
 					onclick={() => {
 						data.public = !data.public;
 					}}
-					class="text-center"
+					class="rounded-md px-2 py-1 text-xs font-semibold hover:bg-[var(--qq-green-soft)]"
 				>
 					{#if data.public}
 						<svg
@@ -171,226 +185,239 @@ SPDX-License-Identifier: MPL-2.0
 					{/if}
 				</button>
 			</div>
-		</div>
-		{#each data.questions as question, index}
-			<div
-				class="bg-white shadow-smrounded-lg h-40 p-2 mb-6 hover:cursor-pointer drop-shadow-2xl border border-gray-500 dark:bg-gray-600 transition relative"
-				class:bg-green-300={index === selected_question}
-				class:dark:bg-green-500={index === selected_question}
-				onclick={() => {
-					setSelectedQuestion(index);
-				}}
+		</article>
+		{#each data.questions as question, index (question)}
+			<article
+				class="qq-card w-[min(78vw,18rem)] shrink-0 p-3 transition md:w-auto"
+				style:background-color={index === selected_question
+					? 'var(--qq-green-soft)'
+					: undefined}
+				style:border-color={index === selected_question ? 'var(--qq-green)' : undefined}
 				bind:this={arr_of_cards[index]}
 			>
-				{#if reorder_mode}
-					<div
-						transition:fade|global={{ duration: 90 }}
-						class="absolute z-10 grid grid-cols-2 bg-transparent w-full rounded-sm h-full"
+				<div class="mb-2 flex items-center justify-between gap-2">
+					<button
+						type="button"
+						class="min-w-0 flex-1 truncate text-left text-[0.65rem] font-bold uppercase tracking-wider text-[var(--qq-muted)]"
+						aria-current={index === selected_question ? 'page' : undefined}
+						onclick={() => setSelectedQuestion(index)}
 					>
-						<!-- Div is used, since it just put me on the dashboard when using button elements... Idk why and I hate it-->
-						<div
-							class="h-full"
-							role="button"
-							aria-label="Move card up"
-							class:opacity-50={index === 0}
-							class:pointer-events-none={index === 0}
-							onclick={() =>
-								(data.questions = swapArrayElements(
+						Question {index + 1}
+					</button>
+					<span
+						class="rounded-full bg-[var(--qq-green-soft)] px-2 py-0.5 text-[0.65rem] font-semibold text-[var(--qq-ink)]"
+					>
+						{question.type ?? 'Question'}
+					</span>
+					{#if reorder_mode}
+						<button
+							type="button"
+							class="rounded-lg p-1.5 text-[var(--qq-muted)] hover:bg-[var(--qq-green-soft)] disabled:opacity-40"
+							aria-label={`Move question ${index + 1} up`}
+							title="Move up"
+							disabled={index === 0}
+							onclick={() => {
+								data.questions = swapArrayElements(
 									data.questions,
 									index,
 									index - 1
-								))}
+								);
+							}}
 						>
-							<!-- heroicons/new/ChevronUp --><svg
-								data-slot="icon"
-								aria-hidden="true"
+							<svg
+								class="h-4 w-4"
 								fill="none"
-								stroke-width="1.5"
 								stroke="currentColor"
 								viewBox="0 0 24 24"
-								xmlns="http://www.w3.org/2000/svg"
 							>
 								<path
-									d="m4.5 15.75 7.5-7.5 7.5 7.5"
 									stroke-linecap="round"
 									stroke-linejoin="round"
+									stroke-width="2"
+									d="m5 15 7-7 7 7"
 								/>
 							</svg>
-						</div>
-						<div
-							class="h-full"
-							role="button"
-							aria-label="Move card down"
-							class:opacity-50={index + 1 === data.questions.length}
-							class:pointer-events-none={index + 1 === data.questions.length}
-							onclick={() =>
-								(data.questions = swapArrayElements(
+						</button>
+						<button
+							type="button"
+							class="rounded-lg p-1.5 text-[var(--qq-muted)] hover:bg-[var(--qq-green-soft)] disabled:opacity-40"
+							aria-label={`Move question ${index + 1} down`}
+							title="Move down"
+							disabled={index + 1 === data.questions.length}
+							onclick={() => {
+								data.questions = swapArrayElements(
 									data.questions,
 									index,
 									index + 1
-								))}
+								);
+							}}
 						>
-							<!-- heroicons/new/ChevronDown -->
 							<svg
-								data-slot="icon"
-								aria-hidden="true"
+								class="h-4 w-4"
 								fill="none"
-								stroke-width="1.5"
 								stroke="currentColor"
 								viewBox="0 0 24 24"
-								xmlns="http://www.w3.org/2000/svg"
 							>
 								<path
-									d="m19.5 8.25-7.5 7.5-7.5-7.5"
 									stroke-linecap="round"
 									stroke-linejoin="round"
+									stroke-width="2"
+									d="m19 9-7 7-7-7"
 								/>
 							</svg>
-						</div>
-					</div>
-				{/if}
-				<button
-					class="rounded-full absolute -top-3 -right-3 opacity-70 hover:opacity-100 transition"
-					type="button"
-					onclick={() => {
-						if (confirm('Do you really want to delete this Question?')) {
-							selected_question = -1;
-							data.questions.splice(index, 1);
-							data.questions = data.questions;
-						}
-					}}
-				>
-					<svg
-						class="w-6 h-6 bg-red-500 rounded-full"
-						fill="none"
-						stroke="currentColor"
-						viewBox="0 0 24 24"
-						xmlns="http://www.w3.org/2000/svg"
+						</button>
+					{/if}
+					<button
+						class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[var(--qq-muted)] transition hover:bg-red-50 hover:text-red-700"
+						type="button"
+						aria-label={`Delete question ${index + 1}`}
+						title="Delete question"
+						onclick={() => {
+							if (confirm('Do you really want to delete this Question?')) {
+								selected_question = -1;
+								data.questions.splice(index, 1);
+								data.questions = data.questions;
+							}
+						}}
 					>
-						<path
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							stroke-width="2"
-							d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
-						/>
-					</svg>
-				</button>
-				<div
-					use:tippy={{
-						content: question.question === '' ? 'No title' : question.question
-					}}
-					class="m-1 border border-gray-500 rounded-lg p-0.5"
-				>
-					<h1
-						class="whitespace-nowrap truncate text-center rounded-lg dark:text-white transition"
-						class:bg-yellow-500={!reach(dataSchema, 'questions[].question').isValidSync(
-							question.question
-						)}
-						class:dark:text-black={index === selected_question}
-					>
-						{#if question.question === ''}
-							<span class="italic text-gray-500">{$t('editor.no_title')}</span>
-						{:else}
-							{@html question.question}
-						{/if}
-					</h1>
+						<svg
+							class="h-4 w-4"
+							fill="none"
+							stroke="currentColor"
+							viewBox="0 0 24 24"
+							xmlns="http://www.w3.org/2000/svg"
+							aria-hidden="true"
+						>
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M6 7h12m-10 0 .7 13h6.6L16 7M9 7V4h6v3m-5 4v5m4-5v5"
+							/>
+						</svg>
+					</button>
 				</div>
-				{#if question.image}
-					<div class="flex justify-center align-middle pb-0.5">
-						<img
-							src="/api/v1/storage/download/{question.image}"
-							class="h-10 border rounded-lg"
-							alt="Not available"
-							use:tippy={{
-								content: `<img src="/api/v1/storage/download/${question.image}" alt="Not available" class="rounded-sm">`,
-								allowHTML: true
-							}}
-						/>
+				<div class="space-y-2">
+					<div
+						use:tippy={{
+							content: question.question === '' ? 'No title' : question.question
+						}}
+						class="m-1 border border-gray-500 rounded-lg p-0.5"
+					>
+						<h1
+							class="whitespace-nowrap truncate text-center rounded-lg dark:text-white transition"
+							class:bg-yellow-500={!reach(
+								dataSchema,
+								'questions[].question'
+							).isValidSync(question.question)}
+							class:dark:text-black={index === selected_question}
+						>
+							{#if question.question === ''}
+								<span class="italic text-gray-500">{$t('editor.no_title')}</span>
+							{:else}
+								{@html question.question}
+							{/if}
+						</h1>
 					</div>
-				{/if}
-
-				{#if question.type === QuizQuestionType.ABCD || question.type === QuizQuestionType.CHECK}
-					<div class="grid grid-cols-2 gap-2">
-						{#if Array.isArray(question.answers)}
-							{#each question.answers as answer}
-								<span
-									class="whitespace-nowrap truncate rounded-lg p-0.5 text-sm text-center border border-gray-700"
-									class:bg-green-500={answer.right}
-									class:bg-red-500={!answer.right}
-									class:bg-yellow-500={!reach(
-										ABCDQuestionSchema,
-										'answer'
-									).isValidSync(answer.answer)}
-									use:tippy={{
-										content:
-											answer.answer === ''
-												? $t('editor.empty')
-												: answer.answer
-									}}
-									>{#if answer.answer === ''}
-										<i>{$t('editor.empty')}</i>
-									{:else}
-										{answer.answer}
-									{/if}</span
-								>
-							{/each}
-						{/if}
-					</div>
-				{:else if question.type === QuizQuestionType.RANGE}
-					<p class="text-center text-sm p-0.5">
-						All numbers between {question.answers.min_correct}
-						and {question.answers.max_correct} are correct, where numbers between {question
-							.answers.min} and {question.answers.max} can be selected.
-					</p>
-				{:else if question.type === QuizQuestionType.VOTING || question.type === QuizQuestionType.TEXT}
-					{#if Array.isArray(question.answers)}
-						<div class="grid grid-cols-2 gap-2">
-							{#each question.answers as answer}
-								<span
-									class="whitespace-nowrap truncate rounded-lg p-0.5 text-sm text-center border border-gray-700"
-									class:dark:bg-gray-500={answer.answer}
-									class:bg-gray-300={answer.answer}
-									class:bg-yellow-500={!reach(
-										ABCDQuestionSchema,
-										'answer'
-									).isValidSync(answer.answer)}
-									use:tippy={{
-										content:
-											answer.answer === ''
-												? $t('editor.empty')
-												: answer.answer
-									}}
-									>{#if answer.answer === ''}
-										<i>{$t('editor.empty')}</i>
-									{:else}
-										{answer.answer}
-									{/if}</span
-								>
-							{/each}
+					{#if question.image}
+						<div class="flex justify-center align-middle pb-0.5">
+							<img
+								src="/api/v1/storage/download/{question.image}"
+								class="h-10 border rounded-lg"
+								alt="Not available"
+								use:tippy={{
+									content: `<img src="/api/v1/storage/download/${question.image}" alt="Not available" class="rounded-sm">`,
+									allowHTML: true
+								}}
+							/>
 						</div>
 					{/if}
-				{:else if question.type === QuizQuestionType.SLIDE}
-					<p>Some smart information on a slide</p>
-				{:else if question.type === QuizQuestionType.ORDER}
-					<p>Get thing's into the right order!</p>
-				{:else}
-					<p>Unknown Question Type (shouldn't happen)</p>
-				{/if}
-			</div>
+
+					{#if question.type === QuizQuestionType.ABCD || question.type === QuizQuestionType.CHECK}
+						<div class="grid grid-cols-2 gap-2">
+							{#if Array.isArray(question.answers)}
+								{#each question.answers as answer, answerIndex (answerIndex)}
+									<span
+										class="whitespace-nowrap truncate rounded-lg p-0.5 text-sm text-center border border-gray-700"
+										style:background-color={answer.color ??
+											'var(--qq-surface-alt)'}
+										style:color={answer.right ? '#065f46' : 'var(--qq-ink)'}
+										class:font-semibold={answer.right}
+										class:bg-yellow-500={!reach(
+											ABCDQuestionSchema,
+											'answer'
+										).isValidSync(answer.answer)}
+										use:tippy={{
+											content:
+												answer.answer === ''
+													? $t('editor.empty')
+													: answer.answer
+										}}
+										>{#if answer.answer === ''}
+											<i>{$t('editor.empty')}</i>
+										{:else}
+											{answer.answer}
+										{/if}</span
+									>
+								{/each}
+							{/if}
+						</div>
+					{:else if question.type === QuizQuestionType.RANGE}
+						<p class="text-center text-sm p-0.5">
+							All numbers between {question.answers.min_correct}
+							and {question.answers.max_correct} are correct, where numbers between {question
+								.answers.min} and {question.answers.max} can be selected.
+						</p>
+					{:else if question.type === QuizQuestionType.VOTING || question.type === QuizQuestionType.TEXT}
+						{#if Array.isArray(question.answers)}
+							<div class="grid grid-cols-2 gap-2">
+								{#each question.answers as answer, answerIndex (answerIndex)}
+									<span
+										class="whitespace-nowrap truncate rounded-lg p-0.5 text-sm text-center border border-gray-700"
+										class:dark:bg-gray-500={answer.answer}
+										class:bg-gray-300={answer.answer}
+										class:bg-yellow-500={!reach(
+											ABCDQuestionSchema,
+											'answer'
+										).isValidSync(answer.answer)}
+										use:tippy={{
+											content:
+												answer.answer === ''
+													? $t('editor.empty')
+													: answer.answer
+										}}
+										>{#if answer.answer === ''}
+											<i>{$t('editor.empty')}</i>
+										{:else}
+											{answer.answer}
+										{/if}</span
+									>
+								{/each}
+							</div>
+						{/if}
+					{:else if question.type === QuizQuestionType.SLIDE}
+						<p>Some smart information on a slide</p>
+					{:else if question.type === QuizQuestionType.ORDER}
+						<p>Get thing's into the right order!</p>
+					{:else}
+						<p>Unknown Question Type (shouldn't happen)</p>
+					{/if}
+				</div>
+			</article>
 		{/each}
 		<div
-			class="bg-white shadow-smrounded-lg h-40 p-2 hover:cursor-pointer drop-shadow-2xl border border-gray-500 dark:bg-gray-600 grid grid-cols-2"
+			class="grid h-28 w-[min(78vw,18rem)] shrink-0 grid-cols-2 overflow-hidden rounded-xl border border-dashed border-[var(--qq-border)] bg-[var(--qq-surface)] md:h-28 md:w-full"
 		>
 			<button
 				type="button"
-				class="h-full flex justify-center w-full flex-col border-r border-black dark:text-white"
+				class="flex h-full w-full flex-col items-center justify-center gap-1 border-r border-[var(--qq-border)] text-sm font-semibold text-[var(--qq-ink)] hover:bg-[var(--qq-green-soft)]"
 				onclick={() => {
 					add_new_question_popup_open = true;
 				}}
 			>
 				<span class="w-full text-center">{$t('words.question')}</span>
 				<svg
-					class="w-5/6 m-auto"
+					class="h-6 w-6"
 					fill="none"
 					stroke="currentColor"
 					viewBox="0 0 24 24"
@@ -406,14 +433,14 @@ SPDX-License-Identifier: MPL-2.0
 			</button>
 			<button
 				type="button"
-				class="h-full flex justify-center w-full dark:text-white flex-col"
+				class="flex h-full w-full flex-col items-center justify-center gap-1 text-sm font-semibold text-[var(--qq-ink)] hover:bg-[var(--qq-green-soft)]"
 				onclick={() => {
 					data.questions = [...data.questions, { ...empy_slide }];
 				}}
 			>
 				<span class="w-full text-center">{$t('words.slide')}</span>
 				<svg
-					class="w-5/6 m-auto"
+					class="h-6 w-6"
 					fill="none"
 					stroke="currentColor"
 					viewBox="0 0 24 24"

@@ -58,7 +58,7 @@ SPDX-License-Identifier: MPL-2.0
 </svelte:head>
 
 {#if data !== undefined}
-	<Editor bind:data bind:quiz_id />
+	<Editor bind:data {quiz_id} />
 {/if}
 
 <div

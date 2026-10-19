@@ -29,9 +29,10 @@ SPDX-License-Identifier: MPL-2.0
 	interface Props {
 		// import Autoformat from "@ckeditor/ckeditor5-autoformat/src/autoformat"
 		text?: string;
+		label?: string;
 	}
 
-	let { text = $bindable('') }: Props = $props();
+	let { text = $bindable(''), label = 'Editable text' }: Props = $props();
 
 	let html_el = $state();
 
@@ -89,15 +90,21 @@ SPDX-License-Identifier: MPL-2.0
 	});
 </script>
 
-<div class="w-fit rounded-lg border-gray-500 border">
+<div class="w-full">
 	<div
 		bind:this={html_el}
 		contenteditable="true"
-		class="rounded-lg border-gray-500 border text-center w-fit h-fit resize-none dark:bg-gray-500 min-w-[5rem] dark:text-white"
+		aria-label={label}
+		class="min-h-14 w-full rounded-xl border border-[var(--qq-border)] bg-[var(--qq-surface)] px-4 py-3 text-left text-2xl font-semibold text-[var(--qq-ink)] outline-none transition focus-within:border-[var(--qq-green)] focus-within:ring-2 focus-within:ring-[var(--qq-green)] sm:text-3xl"
 	></div>
 </div>
 
 <style>
+	:global(.ck-editor__editable) {
+		color: var(--qq-ink) !important;
+		background-color: transparent !important;
+	}
+
 	:global(.ck-powered-by) {
 		display: none;
 	}

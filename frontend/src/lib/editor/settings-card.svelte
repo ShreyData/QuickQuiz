@@ -25,60 +25,75 @@ SPDX-License-Identifier: MPL-2.0
 	let { edit_id = $bindable(), data = $bindable() }: Props = $props();
 
 	let custom_bg_color = $state(Boolean(data.background_color));
+	const theme_presets = [
+		{ name: 'Classic', color: '#4F46E5' },
+		{ name: 'Energy', color: '#FF8A65' },
+		{ name: 'Mint', color: '#14B8A6' },
+		{ name: 'Night', color: '#1F2937' }
+	];
 	const tippy = createTippy({
 		arrow: true,
 		animation: 'perspective-subtle'
 	});
+
+	const applyThemePreset = (presetColor: string) => {
+		data.background_color = presetColor;
+		custom_bg_color = true;
+	};
 
 	$effect(() => {
 		data.background_color = custom_bg_color ? data.background_color : undefined;
 	});
 </script>
 
-<div class="min-h-full w-full px-4 pb-10 sm:px-8 xl:px-12">
-	<div class="min-h-full rounded-lg bg-white w-full border-gray-500 dark:bg-gray-700">
-		<div class="h-fit bg-gray-300 rounded-t-lg dark:bg-gray-500">
-			<div class="flex align-middle p-4 gap-3">
-				<span
-					class="inline-block bg-gray-600 w-4 h-4 rounded-full hover:bg-red-400 transition"
-				></span>
-				<span
-					class="inline-block bg-gray-600 w-4 h-4 rounded-full hover:bg-yellow-400 transition"
-				></span>
-				<span
-					class="inline-block bg-gray-600 w-4 h-4 rounded-full hover:bg-green-400 transition"
-				></span>
-			</div>
-		</div>
+<div class="mx-auto min-h-full w-full max-w-4xl px-3 pb-10 sm:px-6">
+	<div class="qq-card min-h-full overflow-hidden">
+		<header class="border-b border-[var(--qq-border)] px-5 py-4 sm:px-8">
+			<h1 class="text-xl font-bold text-[var(--qq-ink)]">Quiz details</h1>
+			<p class="mt-1 text-sm text-[var(--qq-muted)]">
+				Set the title, description, visibility, and appearance for your quiz.
+			</p>
+		</header>
 		<div
-			class="dark:bg-gray-700 h-full"
+			class="h-full px-4 pb-8 sm:px-8"
 			style="background-repeat: no-repeat;background-size: 100% 100%;background-image: {data.background_image
 				? `url("/api/v1/storage/download/${data.background_image}")`
 				: `unset`}"
 		>
-			<div class="flex justify-center pt-10 w-full">
+			<div class="mx-auto w-full max-w-2xl pt-6">
+				<p class="mb-2 text-sm font-semibold text-[var(--qq-ink)]">Quiz title</p>
+			</div>
+			<div class="mx-auto flex w-full max-w-2xl justify-center">
 				{#await loadEditorComponent(import('$lib/inline-editor.svelte'))}
 					<Spinner my_20={false} />
 				{:then c}
-					<c.default bind:text={data.title} />
+					<c.default bind:text={data.title} label="Quiz title" />
 				{:catch}
 					<LoadError />
 				{/await}
 			</div>
-			<div class="flex justify-center pt-10 w-full max-h-32">
+			<div class="mx-auto mt-5 w-full max-w-2xl">
+				<label
+					for="quiz-description"
+					class="mb-2 block text-sm font-semibold text-[var(--qq-ink)]"
+				>
+					Description
+				</label>
 				<textarea
-					placeholder="Description"
+					id="quiz-description"
+					placeholder="What should players know about this quiz?"
 					bind:value={data.description}
-					class="p-3 rounded-lg border-gray-500 border text-center w-1/3 h-20 resize-none dark:bg-gray-500 outline-hidden focus:shadow-2xl transition-all"
+					rows="3"
+					class="qq-input resize-y text-left"
 				></textarea>
 			</div>
 
 			{#if data.cover_image != undefined && data.cover_image !== ''}
-				<div class="flex justify-center pt-10 w-full max-h-72">
+				<div class="mx-auto flex max-h-72 w-full max-w-2xl justify-center pt-6">
 					<img
 						src="/api/v1/storage/download/{data.cover_image}"
-						alt="not available"
-						class="max-h-72 h-auto w-auto"
+						alt="Quiz cover preview"
+						class="h-auto max-h-72 w-auto rounded-xl border border-[var(--qq-border)]"
 						oncontextmenu={(e: Event) => {
 							e.preventDefault();
 							data.cover_image = null;
@@ -94,13 +109,23 @@ SPDX-License-Identifier: MPL-2.0
 					<LoadError />
 				{/await}
 			{/if}
-			<div class="pt-10 w-full flex justify-center">
+			<section
+				class="mx-auto mt-8 flex w-full max-w-2xl flex-wrap items-center justify-between gap-4 rounded-xl border border-[var(--qq-border)] p-4"
+			>
+				<div>
+					<h2 class="font-semibold text-[var(--qq-ink)]">Quiz visibility</h2>
+					<p class="text-sm text-[var(--qq-muted)]">
+						{#if data.public}Others can discover this quiz.{:else}Only you can access
+							this quiz.{/if}
+					</p>
+				</div>
 				<button
 					type="button"
 					onclick={() => {
 						data.public = !data.public;
 					}}
-					class="text-center w-fit"
+					class="qq-button-secondary"
+					aria-pressed={data.public}
 				>
 					{#if data.public}
 						<svg
@@ -136,36 +161,63 @@ SPDX-License-Identifier: MPL-2.0
 						<span>{$t('words.private')}</span>
 					{/if}
 				</button>
-			</div>
-			<div class="pt-10 w-full flex justify-center">
-				<div class="grid grid-cols-3 w-fit h-fit gap-4">
+			</section>
+			<section
+				class="mx-auto mt-8 w-full max-w-2xl rounded-xl border border-[var(--qq-border)] p-4 sm:p-5"
+			>
+				<div class="mb-4">
+					<h2 class="font-semibold text-[var(--qq-ink)]">Theme presets</h2>
+					<p class="text-sm text-[var(--qq-muted)]">
+						Use a polished default palette so every quiz looks professional without
+						extra edits.
+					</p>
+				</div>
+				<div class="flex flex-wrap items-center gap-3">
+					{#each theme_presets as preset (preset.name)}
+						<button
+							type="button"
+							class="flex items-center gap-2 rounded-full border px-3 py-2 text-sm font-medium transition hover:border-[var(--qq-green)] hover:bg-[var(--qq-green-soft)]"
+							class:border-[var(--qq-green)]={data.background_color === preset.color}
+							onclick={() => applyThemePreset(preset.color)}
+						>
+							<span
+								class="h-4 w-4 rounded-full border border-white/80 shadow-sm"
+								style:background-color={preset.color}
+							></span>
+							{preset.name}
+						</button>
+					{/each}
+				</div>
+			</section>
+			<section
+				class="mx-auto mt-8 w-full max-w-2xl rounded-xl border border-[var(--qq-border)] p-4 sm:p-5"
+			>
+				<div class="mb-4">
+					<h2 class="font-semibold text-[var(--qq-ink)]">Background color</h2>
+					<p class="text-sm text-[var(--qq-muted)]">
+						Choose a custom color for quiz slides.
+					</p>
+				</div>
+				<div class="flex flex-wrap items-center gap-4">
 					<div
-						class="max-w-full transition-all"
+						class="flex h-12 w-16 items-center justify-center overflow-hidden rounded-lg border border-[var(--qq-border)] transition-all"
 						class:opacity-50={custom_bg_color}
 						use:tippy={{ content: 'use the standard background', placement: 'left' }}
 					>
-						<div
-							class="bg-gray-200 rounded-lg w-full h-full p-1"
-							class:pointer-events-none={custom_bg_color}
-						>
-							<span class="inline-block w-full h-full bg-[#d6edc9] dark:bg-[#4e6e58]"
-							></span>
-						</div>
+						<span class="h-full w-full bg-[var(--qq-canvas)]"></span>
 					</div>
 					<div>
 						<label
-							for="large-toggle"
-							class="inline-flex relative items-center cursor-pointer"
+							for="custom-bg-toggle"
+							class="inline-flex cursor-pointer items-center gap-2 text-sm font-medium text-[var(--qq-ink)]"
 						>
 							<input
 								type="checkbox"
 								bind:checked={custom_bg_color}
-								id="large-toggle"
-								class="sr-only peer"
+								id="custom-bg-toggle"
+								class="h-4 w-4 accent-[var(--qq-green)]"
 							/>
-							<span
-								class="w-14 h-7 bg-gray-200 peer-focus:outline-hidden peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-800 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"
-							></span>
+							Use custom color
 						</label>
 					</div>
 					<div
@@ -176,22 +228,30 @@ SPDX-License-Identifier: MPL-2.0
 						<input
 							class:pointer-events-none={!custom_bg_color}
 							type="color"
-							class="rounded-lg p-1 min-h-full hover:cursor-pointer border-black border"
+							aria-label="Custom quiz background color"
+							class="h-12 w-16 rounded-lg border border-[var(--qq-border)] p-1 hover:cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
 							bind:value={data.background_color}
+							disabled={!custom_bg_color}
 						/>
 					</div>
 				</div>
-			</div>
-			<div class="flex justify-center pt-10">
-				<h3>{$t('editor.bg_image')}</h3>
-			</div>
-			<div class="w-full flex justify-center -mt-8">
+			</section>
+			<section
+				class="mx-auto mt-8 w-full max-w-2xl rounded-xl border border-[var(--qq-border)] p-4 sm:p-5"
+			>
+				<div class="mb-4">
+					<h2 class="font-semibold text-[var(--qq-ink)]">{$t('editor.bg_image')}</h2>
+					<p class="text-sm text-[var(--qq-muted)]">
+						Optional image behind your quiz content.
+					</p>
+				</div>
 				{#if data.background_image}
 					<button
+						type="button"
 						onclick={() => {
 							data.background_image = undefined;
 						}}
-						class="mt-10 bg-red-500 p-2 rounded-lg border-2 border-black transition hover:bg-red-400"
+						class="qq-button-secondary"
 						>Remove Background-Image
 					</button>
 				{:else}
@@ -210,7 +270,7 @@ SPDX-License-Identifier: MPL-2.0
 						<LoadError />
 					{/await}
 				{/if}
-			</div>
+			</section>
 		</div>
 	</div>
 </div>
